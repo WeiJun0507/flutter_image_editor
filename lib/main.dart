@@ -1,11 +1,8 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:image_editor_dove/flutter_image_editor.dart';
-import 'package:image_editor_dove/painter/image_editor_painter.dart';
+import 'package:image_editor/flutter_image_editor.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() {

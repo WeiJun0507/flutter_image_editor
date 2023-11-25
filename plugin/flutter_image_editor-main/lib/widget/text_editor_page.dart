@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:image_editor_dove/extension/num_extension.dart';
-import 'package:image_editor_dove/model/float_text_model.dart';
+import 'package:image_editor/extension/general_binding.dart';
+import 'package:image_editor/extension/num_extension.dart';
+import 'package:image_editor/model/float_text_model.dart';
+import 'package:image_editor/widget/color_picker.dart';
 
 import '../image_editor.dart';
 import 'image_editor_delegate.dart';
@@ -209,7 +211,7 @@ class TextEditorPageState extends State<TextEditorPage>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: textColorList
-                          .map<Widget>((e) => CircleColorWidget(
+                          .map<Widget>((e) => ColorPicker(
                                 color: e,
                                 valueListenable: selectedColor,
                                 onColorSelected: (color) {

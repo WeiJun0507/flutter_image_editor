@@ -38,7 +38,7 @@ dependencies:
 
   path_provider:
 
-  image_editor_dove:
+  image_editor:
     path: plugin/flutter_image_editor-main
 
 dev_dependencies:

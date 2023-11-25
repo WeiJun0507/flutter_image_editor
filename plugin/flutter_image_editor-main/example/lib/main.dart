@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_editor_dove/image_editor.dart';
+import 'package:image_editor/image_editor.dart';
 import 'dart:async';
 
 import 'package:image_picker/image_picker.dart';
@@ -44,19 +44,19 @@ class _HomePageState extends State<HomePage> {
   final picker = ImagePicker();
 
   Future<void> toImageEditor(File origin) async {
-    return Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return ImageEditor(
-        originImage: origin,
-      );
-    })).then((result) {
-      if (result is EditorImageResult) {
-        setState(() {
-          _image = result.newFile;
-        });
-      }
-    }).catchError((er) {
-      debugPrint(er);
-    });
+    // return Navigator.push(context, MaterialPageRoute(builder: (context) {
+    //   return ImageEditor(
+    //     originImage: origin,
+    //   );
+    // })).then((result) {
+    //   if (result is EditorImageResult) {
+    //     setState(() {
+    //       _image = result.newFile;
+    //     });
+    //   }
+    // }).catchError((er) {
+    //   debugPrint(er);
+    // });
   }
 
   void getImage() async {
