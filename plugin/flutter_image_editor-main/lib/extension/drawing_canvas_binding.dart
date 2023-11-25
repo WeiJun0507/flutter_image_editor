@@ -5,7 +5,7 @@ import 'package:image_editor/widget/drawing_board.dart';
 import 'package:image_editor/widget/editor_panel_controller.dart';
 
 ///drawing board
-mixin SignatureBinding<T extends StatefulWidget> on State<ImageEditor> {
+mixin SignatureBinding<T extends StatefulWidget> on State<T> {
   DrawStyle get lastDrawStyle => painterController.drawStyle;
 
   ///Canvas layer for each draw action action.
@@ -19,21 +19,13 @@ mixin SignatureBinding<T extends StatefulWidget> on State<ImageEditor> {
   double mosaicWidth = 5.0;
 
   ///painter stroke width.
-  double pStrockWidth = 5;
+  double pStrokeWidth = 5;
 
   ///painter color
   Color pColor = Colors.redAccent;
 
   ///painter controller
   late SignatureController painterController;
-
-  @override
-  void initState() {
-    super.initState();
-    pColor = widget.launcher.pColor;
-    mosaicWidth = widget.launcher.mosaicWidth;
-    pStrockWidth = widget.launcher.pStrockWidth;
-  }
 
   ///switch painter's style
   /// * e.g. color、mosaic
@@ -60,7 +52,7 @@ mixin SignatureBinding<T extends StatefulWidget> on State<ImageEditor> {
                     maxHeight: double.infinity),
               )),
         ));
-    initPainter();
+    initPainter(this.pColor, this.mosaicWidth, this.pStrokeWidth);
     _refreshBrushCanvas();
   }
 
@@ -84,10 +76,18 @@ mixin SignatureBinding<T extends StatefulWidget> on State<ImageEditor> {
     canvasSetter(() {});
   }
 
-  void initPainter() {
+  void initPainter(
+    Color painterColor,
+    double mosaicWidth,
+    double pStrokeWidth,
+  ) {
+    this.pColor = painterColor;
+    this.mosaicWidth = mosaicWidth;
+    this.pStrokeWidth = pStrokeWidth;
+
     painterController = SignatureController(
-        penStrokeWidth: pStrockWidth,
-        penColor: pColor,
+        penStrokeWidth: pStrokeWidth,
+        penColor: painterColor,
         mosaicWidth: mosaicWidth);
   }
 

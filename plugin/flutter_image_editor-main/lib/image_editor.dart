@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:crypto/crypto.dart';
 import 'package:image_editor/extension/general_binding.dart';
+import 'package:image_editor/model/editor_result.dart';
 import 'package:image_editor/painter/image_editor_painter.dart';
 import 'package:image_editor/widget/color_picker.dart';
 import 'dart:ui' as ui;
@@ -23,20 +24,6 @@ import 'widget/image_editor_delegate.dart';
 
 const CanvasLauncher _defaultLauncher =
     CanvasLauncher(mosaicWidth: 5.0, pStrockWidth: 5.0, pColor: Colors.red);
-
-///The editor's result.
-class EditorImageResult {
-  ///image width
-  final int imgWidth;
-
-  ///image height
-  final int imgHeight;
-
-  ///new file after edit
-  final File newFile;
-
-  EditorImageResult(this.imgWidth, this.imgHeight, this.newFile);
-}
 
 ///The launcher provides some initial-values for canvas;
 class CanvasLauncher {
@@ -61,15 +48,14 @@ class CanvasLauncher {
 }
 
 class ImageEditor extends StatefulWidget {
-  const ImageEditor(
-      {Key? key,
-      required this.originImage,
-      required this.uiImage,
-      required this.width,
-      required this.height,
-      this.savePath,
-      this.launcher = _defaultLauncher})
-      : super(key: key);
+  const ImageEditor({
+    Key? key,
+    required this.originImage,
+    required this.uiImage,
+    required this.width,
+    required this.height,
+    this.savePath,
+  }) : super(key: key);
 
   ///origin image
   /// * input for edit
@@ -80,9 +66,6 @@ class ImageEditor extends StatefulWidget {
   ///edited-file's save path.
   /// * if null will save in temporary file.
   final Directory? savePath;
-
-  ///provide some initial value
-  final CanvasLauncher launcher;
 
   /// Image Width
   final int width;
@@ -231,7 +214,11 @@ class ImageEditorState extends State<ImageEditor>
   @override
   void initState() {
     super.initState();
-    initPainter();
+    initPainter(
+      _defaultLauncher.pColor,
+      _defaultLauncher.mosaicWidth,
+      _defaultLauncher.pStrockWidth,
+    );
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       canvasHeight = min(
         widget.height.toDouble(),
@@ -256,9 +243,7 @@ class ImageEditorState extends State<ImageEditor>
     return Material(
       color: Colors.black,
       child: Listener(
-        onPointerMove: (v) {
-          panelController.pointerMoving(v);
-        },
+        onPointerMove: panelController.pointerMoving,
         child: Stack(
           children: [
             //appBar
