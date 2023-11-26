@@ -4,10 +4,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:crypto/crypto.dart';
 import 'package:image_editor/extension/general_binding.dart';
 import 'package:image_editor/model/editor_result.dart';
+import 'package:image_editor/painter/drawing_pad_painter.dart';
 import 'package:image_editor/painter/image_editor_painter.dart';
 import 'package:image_editor/widget/color_picker.dart';
 import 'dart:ui' as ui;
@@ -18,7 +18,6 @@ import 'extension/num_extension.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'extension/text_canvas_binding.dart';
-import 'widget/drawing_board.dart';
 import 'widget/editor_panel_controller.dart';
 import 'widget/image_editor_delegate.dart';
 
@@ -85,7 +84,7 @@ class ImageEditor extends StatefulWidget {
 
 class ImageEditorState extends State<ImageEditor>
     with
-        SignatureBinding,
+        DrawingBinding,
         TextCanvasBinding,
         RotateCanvasBinding,
         ClipCanvasBinding,
@@ -126,6 +125,7 @@ class ImageEditorState extends State<ImageEditor>
       ),
       image: widget.uiImage,
       textItems: textModels.toList(),
+      points: painterController.drawHistory,
       isGeneratingResult: true,
     );
     ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -164,47 +164,6 @@ class ImageEditorState extends State<ImageEditor>
     } else {
       print("Error");
     }
-
-    // Future.value().then((value) async {
-    //   if (painterController.points.isEmpty &&
-    //       pathRecord.length == 1 &&
-    //       textModels.isEmpty &&
-    //       rotateValue == 0 &&
-    //       flipValue == 0.0) {
-    //     Navigator.pop(context, {'original': true});
-    //     return;
-    //   }
-    //
-    //   RenderRepaintBoundary boundary = _boundaryKey.currentContext
-    //       ?.findRenderObject() as RenderRepaintBoundary;
-    //
-    //   ui.Image image =
-    //       await boundary.toImage(pixelRatio: ui.window.devicePixelRatio);
-    //   ByteData? byteData =
-    //       await image.toByteData(format: ui.ImageByteFormat.png);
-    //   var pngBytes = byteData?.buffer.asUint8List();
-    //
-    //   final paths = widget.savePath ?? await getTemporaryDirectory();
-    //   final file = await File('${paths.path}/' +
-    //           md5.convert(utf8.encode(DateTime.now().toString())).toString() +
-    //           '.jpg')
-    //       .create();
-    //   file.writeAsBytes(pngBytes ?? []);
-    //   decodeImg().then((value) {
-    //     if (value == null) {
-    //       Navigator.pop(context);
-    //     } else {
-    //       Navigator.pop(
-    //           context, EditorImageResult(value.width, value.height, file));
-    //     }
-    //   }).catchError((e) {
-    //     Navigator.pop(context);
-    //   });
-    // });
-  }
-
-  Future<ui.Image?> decodeImg() async {
-    return await decodeImageFromList(widget.originImage.readAsBytesSync());
   }
 
   static ImageEditorState? of(BuildContext context) {
@@ -301,12 +260,23 @@ class ImageEditorState extends State<ImageEditor>
                           ),
                           image: widget.uiImage,
                           textItems: textModels.toList(),
+                          points: painterController.drawHistory,
                           isGeneratingResult: false,
                         ),
                         child: Stack(
                           children: <Widget>[
                             for (final model in textModels)
                               buildTextComponent(model),
+                            if (panelController.operateType.value ==
+                                OperateType.brush)
+                              Positioned.fill(
+                                child: buildDrawingComponent(Rect.fromLTRB(
+                                  topLeft.dx,
+                                  topLeft.dy,
+                                  bottomRight.dx,
+                                  bottomRight.dy,
+                                )),
+                              ),
                           ],
                         ),
                       ),
@@ -380,7 +350,8 @@ class ImageEditorState extends State<ImageEditor>
                                   valueListenable:
                                       panelController.colorSelected,
                                   onColorSelected: (color) {
-                                    if (pColor.value == color.value) return;
+                                    if (painterController.painterStyle.color ==
+                                        color.value) return;
                                     changePainterColor(color);
                                   },
                                 ))

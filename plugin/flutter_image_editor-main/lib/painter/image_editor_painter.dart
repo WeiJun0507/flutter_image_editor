@@ -1,7 +1,9 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:image_editor/extension/drawing_canvas_binding.dart';
 import 'package:image_editor/model/float_text_model.dart';
+import 'package:image_editor/painter/drawing_pad_painter.dart';
 import 'package:image_editor/widget/editor_panel_controller.dart';
 
 class ImageEditorPainter extends CustomPainter {
@@ -14,6 +16,8 @@ class ImageEditorPainter extends CustomPainter {
   final List<FloatTextModel> textItems;
   BaseFloatModel? model;
 
+  final List<PointConfig> points;
+
   final bool isGeneratingResult;
 
   ImageEditorPainter({
@@ -22,6 +26,7 @@ class ImageEditorPainter extends CustomPainter {
     required this.cropRect,
     required this.image,
     required this.textItems,
+    required this.points,
     required this.isGeneratingResult,
   });
 
@@ -47,6 +52,14 @@ class ImageEditorPainter extends CustomPainter {
         textItems,
         false,
       );
+
+      paintDrawing(
+        canvas,
+        originalRect.size,
+        Offset(cropRect.left, cropRect.top),
+        points,
+        isGeneratingResult,
+      );
     } else {
       canvas.drawImageRect(
         image,
@@ -59,6 +72,14 @@ class ImageEditorPainter extends CustomPainter {
         originalRect.size,
         Offset(cropRect.left, cropRect.top),
         textItems,
+        isGeneratingResult,
+      );
+
+      paintDrawing(
+        canvas,
+        cropRect.size,
+        Offset(cropRect.left, cropRect.top),
+        points,
         isGeneratingResult,
       );
     }
@@ -112,6 +133,49 @@ class ImageEditorPainter extends CustomPainter {
 
         final offset = Offset(widthDiff, heightDiff);
         textPainter.paint(canvas, offset);
+      }
+    }
+  }
+
+  void paintDrawing(
+    Canvas canvas,
+    Size size,
+    Offset cropTopLeftOffset,
+    List<PointConfig> points,
+    bool isGeneratingResult,
+  ) {
+    for (final point in points) {
+      final Paint painter = Paint()
+        ..color = point.painterStyle.color
+        ..strokeWidth = point.painterStyle.strokeWidth
+        ..style = PaintingStyle.stroke;
+
+      switch (point.painterStyle.drawStyle) {
+        case DrawStyle.normal:
+          canvas.drawPath(
+            paintPath(
+              canvas,
+              size,
+              originalRect,
+              isGeneratingResult ? cropRect : originalRect,
+              point.drawRecord,
+              painter,
+            ),
+            painter,
+          );
+          break;
+        case DrawStyle.mosaic:
+          //reduce the frequency of mosaic drawing.
+          paintMosaic(
+            canvas,
+            size,
+            isGeneratingResult ? cropRect : originalRect,
+            point,
+          );
+
+          break;
+        case DrawStyle.non:
+          break;
       }
     }
   }

@@ -1,69 +1,38 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:image_editor/extension/general_binding.dart';
-import 'package:image_editor/image_editor.dart';
+import 'package:image_editor/painter/drawing_pad_painter.dart';
 import 'package:image_editor/widget/drawing_board.dart';
-import 'package:image_editor/widget/editor_panel_controller.dart';
 
 ///drawing board
-mixin SignatureBinding<T extends StatefulWidget> on State<T> {
-  DrawStyle get lastDrawStyle => painterController.drawStyle;
+mixin DrawingBinding<T extends StatefulWidget> on State<T> {
+  /// Drawing Controller
+  late DrawingController painterController;
 
-  ///Canvas layer for each draw action action.
-  /// * e.g. First draw some path with white color, than change the color and draw some path again.
-  /// * After this [pathRecord] will save 2 layes in it.
-  final List<Widget> pathRecord = [];
+  final List<List<Point>> drawHistory = List.empty(growable: true);
 
   late StateSetter canvasSetter;
-
-  ///mosaic pixel's width
-  double mosaicWidth = 5.0;
-
-  ///painter stroke width.
-  double pStrokeWidth = 5;
-
-  ///painter color
-  Color pColor = Colors.redAccent;
-
-  ///painter controller
-  late SignatureController painterController;
 
   ///switch painter's style
   /// * e.g. color、mosaic
   void switchPainterMode(DrawStyle style) {
-    if (lastDrawStyle == style) return;
-    changePainterColor(pColor);
-    painterController.drawStyle = style;
+    if (style == painterController.painterStyle.drawStyle) {
+      painterController.painterStyle =
+          painterController.painterStyle.copyWith(drawStyle: DrawStyle.non);
+      realState?.panelController.cancelOperateType();
+      return;
+    }
+
+    painterController.painterStyle =
+        painterController.painterStyle.copyWith(drawStyle: style);
   }
 
   ///change painter's color
   void changePainterColor(Color color) async {
-    pColor = color;
     realState?.panelController.selectColor(color);
-    pathRecord.insert(
-        0,
-        RepaintBoundary(
-          child: CustomPaint(
-              painter: SignaturePainter(painterController),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                    minWidth: double.infinity,
-                    minHeight: double.infinity,
-                    maxWidth: double.infinity,
-                    maxHeight: double.infinity),
-              )),
-        ));
-    initPainter(this.pColor, this.mosaicWidth, this.pStrokeWidth);
-    _refreshBrushCanvas();
-  }
-
-  void _refreshBrushCanvas() {
-    pathRecord.removeLast();
-    //add new layer.
-    pathRecord.add(Signature(
-      controller: painterController,
-      backgroundColor: Colors.transparent,
-    ));
-    _refreshCanvas();
+    painterController.painterStyle =
+        painterController.painterStyle.copyWith(color: color);
   }
 
   ///undo last drawing.
@@ -71,48 +40,136 @@ mixin SignatureBinding<T extends StatefulWidget> on State<T> {
     painterController.undo();
   }
 
-  ///refresh canvas.
-  void _refreshCanvas() {
-    canvasSetter(() {});
-  }
-
   void initPainter(
     Color painterColor,
     double mosaicWidth,
     double pStrokeWidth,
   ) {
-    this.pColor = painterColor;
-    this.mosaicWidth = mosaicWidth;
-    this.pStrokeWidth = pStrokeWidth;
-
-    painterController = SignatureController(
-        penStrokeWidth: pStrokeWidth,
-        penColor: painterColor,
-        mosaicWidth: mosaicWidth);
-  }
-
-  Widget buildBrushCanvas(double width, double height) {
-    if (pathRecord.isEmpty) {
-      pathRecord.add(Signature(
-        controller: painterController,
-        backgroundColor: Colors.transparent,
-        width: width,
-        height: height,
-      ));
-    }
-    return StatefulBuilder(
-      builder: (ctx, canvasSetter) {
-        this.canvasSetter = canvasSetter;
-        return realState?.ignoreWidgetByType(
-                OperateType.brush, Stack(children: pathRecord)) ??
-            const SizedBox();
-      },
+    painterController = DrawingController();
+    painterController.painterStyle = PainterStyle(
+      color: painterColor,
+      mosaicWidth: mosaicWidth,
+      strokeWidth: pStrokeWidth,
+      drawStyle: DrawStyle.non,
     );
+
+    /// todo: See what the listener can do
+    painterController.addListener(() {
+      if (mounted) realState?.setState(() {});
+    });
   }
 
-  @override
-  void dispose() {
-    pathRecord.clear();
-    super.dispose();
+  /// The Drawing Component should only put Listener
+  /// instead of the whole function drawing pad
+  Widget buildDrawingComponent(Rect rect) {
+    return DrawingBoard(controller: painterController, rect: rect);
+  }
+}
+
+extension DrawingPath on CustomPainter {
+  //for draw [DrawStyle.mosaic]
+  void paintMosaic(
+    Canvas canvas,
+    Size size,
+    Rect rect,
+    PointConfig point,
+  ) {
+    for (int i = 0; i < point.drawRecord.length; i += 2) {
+      final Offset center = point.drawRecord[i].offset;
+      if (center.dx < rect.left || center.dx > rect.right) return;
+      if (center.dy < rect.top || center.dy > rect.bottom) return;
+
+      final Paint paint = Paint()..color = Colors.black26;
+      final double size = point.painterStyle.mosaicWidth;
+      final double halfSize = size / 2;
+      final Rect b1 = Rect.fromCenter(
+        center: center.translate(-halfSize, -halfSize),
+        width: size,
+        height: size,
+      );
+      //0,0
+      canvas.drawRect(b1, paint);
+      paint.color = Colors.grey.withOpacity(0.5);
+      //0,1
+      canvas.drawRect(b1.translate(0, size), paint);
+      paint.color = Colors.black38;
+      //0,2
+      canvas.drawRect(b1.translate(0, size * 2), paint);
+      paint.color = Colors.black12;
+      //1,0
+      canvas.drawRect(b1.translate(size, 0), paint);
+      paint.color = Colors.black26;
+      //1,1
+      canvas.drawRect(b1.translate(size, size), paint);
+      paint.color = Colors.black45;
+      //1,2
+      canvas.drawRect(b1.translate(size, size * 2), paint);
+      paint.color = Colors.grey.withOpacity(0.5);
+      //2,0
+      canvas.drawRect(b1.translate(size * 2, 0), paint);
+      paint.color = Colors.black12;
+      //2,1
+      canvas.drawRect(b1.translate(size * 2, size), paint);
+      paint.color = Colors.black26;
+      //2,2
+      canvas.drawRect(b1.translate(size * 2, size * 2), paint);
+    }
+  }
+
+  //for draw [DrawStyle.normal]
+  Path paintPath(
+    Canvas canvas,
+    Size size,
+    Rect oriRect,
+    Rect rect,
+    List<Point> points,
+    Paint painter,
+  ) {
+    final Path path = Path();
+
+    final Map<int, List<Point>> pathM = {};
+    points.forEach((element) {
+      if (pathM[element.eventId] == null) pathM[element.eventId] = [];
+      pathM[element.eventId]!.add(element);
+    });
+
+    pathM.forEach((key, value) {
+      final Point point = value.first;
+
+      /// Calculate to maintain the actual initial position to start drawing
+      Offset actualPos = point.offset -
+          Offset(rect.left - oriRect.left, rect.top - oriRect.top);
+      actualPos = Offset(
+        clampDouble(actualPos.dx, 0, rect.right),
+        clampDouble(actualPos.dy, 0, rect.bottom),
+      );
+      path.moveTo(actualPos.dx, actualPos.dy);
+
+      if (value.length <= 3) {
+        painter.style = PaintingStyle.fill;
+        canvas.drawCircle(
+          point.offset,
+          painter.strokeWidth,
+          painter,
+        );
+        painter.style = PaintingStyle.stroke;
+      } else {
+        value.forEach((e) {
+          final Point tempPoint = e;
+
+          /// this is the local position of the original rect
+          /// should calculate to translate the position
+          /// to the actual clipped position
+          Offset actualPaintPoint = tempPoint.offset -
+              Offset(rect.left - oriRect.left, rect.top - oriRect.top);
+          actualPaintPoint = Offset(
+            clampDouble(actualPaintPoint.dx, 0, rect.right),
+            clampDouble(actualPaintPoint.dy, 0, rect.bottom),
+          );
+          path.lineTo(actualPaintPoint.dx, actualPaintPoint.dy);
+        });
+      }
+    });
+    return path;
   }
 }
