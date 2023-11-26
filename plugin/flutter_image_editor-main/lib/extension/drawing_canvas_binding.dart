@@ -163,8 +163,8 @@ extension DrawingPath on CustomPainter {
           Offset actualPaintPoint = tempPoint.offset -
               Offset(rect.left - oriRect.left, rect.top - oriRect.top);
           actualPaintPoint = Offset(
-            clampDouble(actualPaintPoint.dx, 0, rect.right),
-            clampDouble(actualPaintPoint.dy, 0, rect.bottom),
+            clampDouble(actualPaintPoint.dx, -5, rect.right),
+            clampDouble(actualPaintPoint.dy, -5, rect.bottom),
           );
           path.lineTo(actualPaintPoint.dx, actualPaintPoint.dy);
         });
