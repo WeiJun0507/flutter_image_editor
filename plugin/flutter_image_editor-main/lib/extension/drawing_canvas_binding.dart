@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:image_editor/extension/general_binding.dart';
+import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/painter/drawing_pad_painter.dart';
 import 'package:image_editor/widget/drawing_board.dart';
 
@@ -9,8 +10,6 @@ import 'package:image_editor/widget/drawing_board.dart';
 mixin DrawingBinding<T extends StatefulWidget> on State<T> {
   /// Drawing Controller
   late DrawingController painterController;
-
-  final List<List<Point>> drawHistory = List.empty(growable: true);
 
   late StateSetter canvasSetter;
 
@@ -61,8 +60,8 @@ mixin DrawingBinding<T extends StatefulWidget> on State<T> {
 
   /// The Drawing Component should only put Listener
   /// instead of the whole function drawing pad
-  Widget buildDrawingComponent(Rect rect) {
-    return DrawingBoard(controller: painterController, rect: rect);
+  Widget buildDrawingComponent(Rect rect, List<PaintOperation> drawHistory) {
+    return DrawingBoard(controller: painterController, rect: rect, drawHistory: drawHistory,);
   }
 }
 
@@ -153,7 +152,7 @@ extension DrawingPath on CustomPainter {
       if (value.length <= 3) {
         painter.style = PaintingStyle.fill;
         canvas.drawCircle(
-          point.offset,
+          actualPos,
           painter.strokeWidth,
           painter,
         );

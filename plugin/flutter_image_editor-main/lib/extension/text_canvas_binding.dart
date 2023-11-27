@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:image_editor/extension/general_binding.dart';
-import 'package:image_editor/model/float_text_model.dart';
+import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/widget/text_editor_page.dart';
 
 ///text painting
 mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
   late StateSetter textSetter;
 
-  final List<FloatTextModel> textModels = [];
-
   void addText(FloatTextModel model) {
-    textModels.add(model);
+    PaintOperation value = PaintOperation(
+      type: operationType.text,
+      data: model,
+    );
+    realState?.operationHistory.add(value);
     if (mounted) setState(() {});
   }
 
   ///delete a text from canvas
   void deleteTextWidget(FloatTextModel target) {
-    textModels.remove(target);
+    int index = realState?.operationHistory.indexWhere((element) => element.data == target) ?? -1;
+    if (index != -1) {
+      realState?.operationHistory.removeAt(index);
+    }
+
     if (mounted) setState(() {});
   }
 

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/painter/drawing_pad_painter.dart';
 
 class DrawingBoard extends StatefulWidget {
   final DrawingController controller;
   final Rect rect;
+  final List<PaintOperation> drawHistory;
 
   const DrawingBoard({
     super.key,
     required this.controller,
     required this.rect,
+    required this.drawHistory,
   });
 
   @override
@@ -29,14 +32,15 @@ class _DrawingBoardState extends State<DrawingBoard> {
     //SAVE POINT ONLY IF IT IS IN THE SPECIFIED BOUNDARIES
     if ((o.dx > widget.rect.left && o.dx < widget.rect.right) &&
         (o.dy > widget.rect.top && o.dy < widget.rect.bottom)) {
-
       if (event is PointerDownEvent) {
-        widget.controller.drawHistory.add(
-          PointConfig(
+        PaintOperation value = PaintOperation(
+          type: operationType.draw,
+          data: PointConfig(
             drawRecord: [],
             painterStyle: widget.controller.painterStyle,
           ),
         );
+        widget.drawHistory.add(value);
       }
       // IF USER LEFT THE BOUNDARY AND AND ALSO RETURNED BACK
       // IN ONE MOVE, RETYPE IT AS TAP, AS WE DO NOT WANT TO
@@ -47,19 +51,24 @@ class _DrawingBoardState extends State<DrawingBoard> {
         t = PointType.tap;
 
         _isOutsideDrawField = false;
-        widget.controller.drawHistory.add(
-          PointConfig(
+
+        PaintOperation value = PaintOperation(
+          type: operationType.draw,
+          data: PointConfig(
             drawRecord: [],
             painterStyle: widget.controller.painterStyle,
           ),
         );
+        widget.drawHistory.add(value);
       } else {
         setState(() {
           //IF USER WAS OUTSIDE OF CANVAS WE WILL RESET THE HELPER VARIABLE AS HE HAS RETURNED
-          widget.controller.addPoint(Point(o, t, event.pointer));
+          widget.controller.addPoint(
+            widget.drawHistory.last,
+            Point(o, t, event.pointer),
+          );
         });
       }
-
     } else {
       //NOTE: USER LEFT THE CANVAS!!! WE WILL SET HELPER VARIABLE
       //WE ARE NOT UPDATING IN setState METHOD BECAUSE WE DO NOT NEED TO RUN BUILD METHOD
@@ -68,7 +77,10 @@ class _DrawingBoardState extends State<DrawingBoard> {
       }
 
       if (event is PointerMoveEvent && !_isOutsideDrawField) {
-        widget.controller.addPoint(Point(o, PointType.tap, event.pointer));
+        widget.controller.addPoint(
+          widget.drawHistory.last,
+          Point(o, PointType.tap, event.pointer),
+        );
         widget.controller.pushCurrentStateToUndoStack();
         _isOutsideDrawField = true;
       }

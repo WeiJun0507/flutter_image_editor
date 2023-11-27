@@ -1,85 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_editor/model/draw.dart';
 
-enum DrawStyle {
-  non,
-  normal,
-  mosaic,
-}
 
-/// type of user display finger movement
-enum PointType {
-  /// one touch on specific place - tap
-  tap,
-
-  /// finger touching the display and moving around
-  move,
-}
-
-/// one point on canvas represented by offset and type
-class Point {
-  /// constructor
-  Point(this.offset, this.type, this.eventId);
-
-  /// x and y value on 2D canvas
-  Offset offset;
-
-  /// type of user display finger movement
-  PointType type;
-
-  int eventId;
-}
-
-class PointConfig {
-  /// Current Layer Draw History
-  List<Point> drawRecord;
-
-  /// Current Layer Drawing Painter Style
-  PainterStyle painterStyle;
-
-  PointConfig({
-    required this.drawRecord,
-    required this.painterStyle,
-  });
-}
-
-class PainterStyle {
-  double mosaicWidth;
-  double strokeWidth;
-  Color color;
-  DrawStyle drawStyle;
-
-  PainterStyle({
-    color = Colors.red,
-    mosaicWidth = 5.0,
-    strokeWidth = 3.0,
-    drawStyle = DrawStyle.normal,
-  })  : this.color = color,
-        this.mosaicWidth = mosaicWidth,
-        this.strokeWidth = strokeWidth,
-        this.drawStyle = drawStyle;
-
-  bool isSame(PainterStyle style) {
-    return mosaicWidth == style.mosaicWidth &&
-        strokeWidth == style.strokeWidth &&
-        color == style.color &&
-        drawStyle == style.drawStyle &&
-        hashCode == style.hashCode;
-  }
-
-  PainterStyle copyWith({
-    Color? color,
-    double? mosaicWidth,
-    double? strokeWidth,
-    DrawStyle? drawStyle,
-  }) {
-    return PainterStyle(
-      color: color ?? this.color,
-      mosaicWidth: mosaicWidth ?? this.mosaicWidth,
-      strokeWidth: strokeWidth ?? this.strokeWidth,
-      drawStyle: drawStyle ?? this.drawStyle,
-    );
-  }
-}
 
 /// class for interaction with signature widget
 /// manages points representing signature on canvas
@@ -99,9 +21,6 @@ class DrawingController extends ChangeNotifier {
   /// background color to be used in exported png image
   final Color? exportBackgroundColor;
 
-  /// Draw Points Record
-  final List<PointConfig> drawHistory = List.empty(growable: true);
-
   /// stack-like list of point to save user's latest action
   final List<PointConfig> _latestActions = <PointConfig>[];
 
@@ -118,29 +37,30 @@ class DrawingController extends ChangeNotifier {
   VoidCallback? onDrawEnd;
 
   /// add point to point collection
-  void addPoint(Point point) {
-    final PointConfig config = drawHistory.last;
+  void addPoint(PaintOperation operation, Point point) {
+    if (operation.type != operationType.draw) return;
+
+    final PointConfig config = operation.data as PointConfig;
     config.drawRecord.add(point);
     notifyListeners();
   }
 
   /// REMEMBERS CURRENT CANVAS STATE IN UNDO STACK
   void pushCurrentStateToUndoStack() {
-    if (drawHistory.isEmpty) return;
-    _latestActions.add(drawHistory.last);
+    // if (drawHistory.isEmpty) return;
+    // _latestActions.add(drawHistory.last);
     //CLEAR ANY UNDO-ED ACTIONS. IF USER UNDO-ED ANYTHING HE ALREADY MADE
     // ANOTHER CHANGE AND LEFT THAT OLD PATH.
-    _revertedActions.clear();
+    // _revertedActions.clear();
   }
 
   /// check if canvas is empty (opposite of isNotEmpty method for convenience)
-  bool get isEmpty {
-    return drawHistory.isEmpty;
-  }
+  // bool get isEmpty {
+  //   return drawHistory.isEmpty;
+  // }
 
   /// clear the canvas
   void clear() {
-    drawHistory.clear();
     _latestActions.clear();
     _revertedActions.clear();
   }
@@ -150,12 +70,12 @@ class DrawingController extends ChangeNotifier {
   /// that will be used to do redo-ing.
   /// Then, it will modify the real points with the last action.
   void undo() {
-    if (drawHistory.isNotEmpty) {
-      drawHistory.removeLast();
-      final PointConfig lastAction = _latestActions.removeLast();
-      _revertedActions.add(lastAction);
-      notifyListeners();
-    }
+    // if (drawHistory.isNotEmpty) {
+    //   drawHistory.removeLast();
+    //   final PointConfig lastAction = _latestActions.removeLast();
+    //   _revertedActions.add(lastAction);
+    //   notifyListeners();
+    // }
   }
 
   /// It will remove last reverted actions and add it into [_latestActions]
@@ -164,7 +84,7 @@ class DrawingController extends ChangeNotifier {
     if (_revertedActions.isEmpty) return;
 
     final PointConfig lastRevertedAction = _revertedActions.removeLast();
-    drawHistory.add(lastRevertedAction);
+    // drawHistory.add(lastRevertedAction);
     _latestActions.add(lastRevertedAction);
     notifyListeners();
   }

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:image_editor/model/float_text_model.dart';
+import 'package:image_editor/model/draw.dart';
 
 ///The object taht are moving.
 enum MoveStuff {
@@ -145,7 +145,7 @@ class EditorPanelController {
   ///moving object.
   /// * must based on [BaseFloatModel].
   /// * most time it's used to find the [movingTarget] that who just realeased.
-  BaseFloatModel? movingTarget;
+  FloatTextModel? movingTarget;
 
   ///cache the target taht just released.
   Offset? pointerUpPosition;
@@ -165,7 +165,7 @@ class EditorPanelController {
   }
 
   ///decided whether the text is deleted or not.
-  bool isThrowText(Offset pointer, BaseFloatModel target) {
+  bool isThrowText(Offset pointer, FloatTextModel target) {
     final Rect textR = Rect.fromCenter(
         center: pointer,
         width: target.floatSize?.width ?? 1,

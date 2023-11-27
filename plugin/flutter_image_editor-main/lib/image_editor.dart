@@ -6,8 +6,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'package:image_editor/extension/general_binding.dart';
+import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/model/editor_result.dart';
-import 'package:image_editor/painter/drawing_pad_painter.dart';
 import 'package:image_editor/painter/image_editor_painter.dart';
 import 'package:image_editor/widget/color_picker.dart';
 import 'dart:ui' as ui;
@@ -110,6 +110,15 @@ class ImageEditorState extends State<ImageEditor>
   /// May be use later to generate the image when clip
   double get imgOriginalRatio => widget.height / widget.width;
 
+  /// operation history
+  /// Record down all the operations that have been performed
+  final List<PaintOperation> operationHistory = List.empty(growable: true);
+
+  List<FloatTextModel> get textModels => operationHistory
+      .where((element) => element.type == operationType.text)
+      .map<FloatTextModel>((e) => e.data as FloatTextModel)
+      .toList();
+
   ///Save the edited-image to [widget.savePath] or [getTemporaryDirectory()].
   void saveImage() async {
     panelController.takeShot.value = true;
@@ -124,8 +133,7 @@ class ImageEditorState extends State<ImageEditor>
         bottomRight.dy,
       ),
       image: widget.uiImage,
-      textItems: textModels.toList(),
-      points: painterController.drawHistory,
+      drawHistory: operationHistory,
       isGeneratingResult: true,
     );
     ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -259,8 +267,7 @@ class ImageEditorState extends State<ImageEditor>
                             bottomRight.dy,
                           ),
                           image: widget.uiImage,
-                          textItems: textModels.toList(),
-                          points: painterController.drawHistory,
+                          drawHistory: operationHistory,
                           isGeneratingResult: false,
                         ),
                         child: Stack(
@@ -272,12 +279,15 @@ class ImageEditorState extends State<ImageEditor>
                                 panelController.operateType.value ==
                                     OperateType.mosaic)
                               Positioned.fill(
-                                child: buildDrawingComponent(Rect.fromLTRB(
-                                  topLeft.dx,
-                                  topLeft.dy,
-                                  bottomRight.dx,
-                                  bottomRight.dy,
-                                )),
+                                child: buildDrawingComponent(
+                                  Rect.fromLTRB(
+                                    topLeft.dx,
+                                    topLeft.dy,
+                                    bottomRight.dx,
+                                    bottomRight.dy,
+                                  ),
+                                  operationHistory,
+                                ),
                               ),
                           ],
                         ),

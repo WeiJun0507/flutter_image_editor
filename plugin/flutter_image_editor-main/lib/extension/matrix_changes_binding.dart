@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:image_editor/extension/general_binding.dart';
+import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/painter/crop_layer_painter.dart';
 
 ///This binding can make editor to roatate canvas
@@ -7,10 +9,10 @@ import 'package:image_editor/painter/crop_layer_painter.dart';
 /// * when canvas rotated. because the paint-path area it's full canvas and
 /// * origin image is not maybe. if force to keep the relative path, will reduce
 /// * the paint-path area.
-mixin RotateCanvasBinding {
+mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
   ///canvas rotate value
   /// * 90 angle each time.
-  int rotateValue = 0;
+  double rotateValue = 0;
 
   ///canvas flip value
   /// * 180 angle each time.
@@ -19,17 +21,31 @@ mixin RotateCanvasBinding {
   ///flip canvas
   void flipCanvas() {
     flipValue = flipValue == 0 ? math.pi : 0;
+    PaintOperation value = PaintOperation(
+      type: operationType.flip,
+      data: FlipInfo(flipRadians: flipValue),
+    );
+    realState?.operationHistory.add(value);
   }
 
   ///routate canvas
   /// * will effect image, text, drawing board
   void rotateCanvasPlate() {
-    rotateValue++;
+    rotateValue = (rotateValue + 1) % 4;
+    PaintOperation value = PaintOperation(
+      type: operationType.rotate,
+      data: RotateInfo(radians: rotateValue * math.pi / 2),
+    );
+    realState?.operationHistory.add(value);
   }
 
   ///reset canvas
   void resetCanvasPlate() {
-    rotateValue = 0;
+    PaintOperation value = PaintOperation(
+      type: operationType.rotate,
+      data: RotateInfo(radians: 0),
+    );
+    realState?.operationHistory.add(value);
   }
 }
 

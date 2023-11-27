@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:image_editor/extension/general_binding.dart';
 import 'package:image_editor/extension/num_extension.dart';
-import 'package:image_editor/model/float_text_model.dart';
+import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/widget/color_picker.dart';
 
 import '../image_editor.dart';
