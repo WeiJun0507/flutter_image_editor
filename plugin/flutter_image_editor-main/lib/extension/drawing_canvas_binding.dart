@@ -71,19 +71,24 @@ extension DrawingPath on CustomPainter {
   void paintMosaic(
     Canvas canvas,
     Size size,
+    Rect oriRect,
     Rect rect,
     PointConfig point,
   ) {
     for (int i = 0; i < point.drawRecord.length; i += 2) {
       final Offset center = point.drawRecord[i].offset;
-      if (center.dx < rect.left || center.dx > rect.right) return;
-      if (center.dy < rect.top || center.dy > rect.bottom) return;
+      Offset actualPos = center -
+          Offset(rect.left - oriRect.left, rect.top - oriRect.top);
+      actualPos = Offset(
+        clampDouble(actualPos.dx, 0, rect.right),
+        clampDouble(actualPos.dy, 0, rect.bottom),
+      );
 
       final Paint paint = Paint()..color = Colors.black26;
       final double size = point.painterStyle.mosaicWidth;
       final double halfSize = size / 2;
       final Rect b1 = Rect.fromCenter(
-        center: center.translate(-halfSize, -halfSize),
+        center: actualPos.translate(-halfSize, -halfSize),
         width: size,
         height: size,
       );
@@ -166,6 +171,7 @@ extension DrawingPath on CustomPainter {
             clampDouble(actualPaintPoint.dx, -5, rect.right),
             clampDouble(actualPaintPoint.dy, -5, rect.bottom),
           );
+
           path.lineTo(actualPaintPoint.dx, actualPaintPoint.dy);
         });
       }

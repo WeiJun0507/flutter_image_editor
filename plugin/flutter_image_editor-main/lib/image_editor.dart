@@ -268,7 +268,9 @@ class ImageEditorState extends State<ImageEditor>
                             for (final model in textModels)
                               buildTextComponent(model),
                             if (panelController.operateType.value ==
-                                OperateType.brush)
+                                    OperateType.brush ||
+                                panelController.operateType.value ==
+                                    OperateType.mosaic)
                               Positioned.fill(
                                 child: buildDrawingComponent(Rect.fromLTRB(
                                   topLeft.dx,
@@ -367,40 +369,49 @@ class ImageEditorState extends State<ImageEditor>
           ),
           Expanded(
             child: Row(
-              children: [
-                _buildButton(OperateType.brush, 'Draw', onPressed: () {
-                  switchPainterMode(DrawStyle.normal);
-                  if (mounted) setState(() {});
-                }),
-                controlBtnSpacing,
-                _buildButton(OperateType.text, 'Text',
-                    onPressed: toTextEditorPage),
-                controlBtnSpacing,
-                _buildButton(OperateType.flip, 'Flip', onPressed: () {
-                  flipCanvas();
-                  if (mounted) setState(() {});
-                }),
-                controlBtnSpacing,
-                _buildButton(
-                  OperateType.rotated,
-                  'Rotate',
-                  onPressed: () {
-                    rotateCanvasPlate();
-                    if (mounted) setState(() {});
-                  },
+              children: <Widget>[
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildButton(OperateType.brush, 'Draw', onPressed: () {
+                          switchPainterMode(DrawStyle.normal);
+                          if (mounted) setState(() {});
+                        }),
+                        controlBtnSpacing,
+                        _buildButton(OperateType.mosaic, 'Mosaic',
+                            onPressed: () {
+                          switchPainterMode(DrawStyle.mosaic);
+                          if (mounted) setState(() {});
+                        }),
+                        controlBtnSpacing,
+                        _buildButton(OperateType.text, 'Text',
+                            onPressed: toTextEditorPage),
+                        controlBtnSpacing,
+                        _buildButton(OperateType.flip, 'Flip', onPressed: () {
+                          flipCanvas();
+                          if (mounted) setState(() {});
+                        }),
+                        controlBtnSpacing,
+                        _buildButton(
+                          OperateType.rotated,
+                          'Rotate',
+                          onPressed: () {
+                            rotateCanvasPlate();
+                            if (mounted) setState(() {});
+                          },
+                        ),
+                        controlBtnSpacing,
+                        _buildButton(
+                          OperateType.clip,
+                          'Clip',
+                          onPressed: !mounted ? null : () => setState(() {}),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                controlBtnSpacing,
-                _buildButton(
-                  OperateType.clip,
-                  'Clip',
-                  onPressed: !mounted ? null : () => setState(() {}),
-                ),
-                controlBtnSpacing,
-                _buildButton(OperateType.mosaic, 'Mosaic', onPressed: () {
-                  switchPainterMode(DrawStyle.mosaic);
-                  if (mounted) setState(() {});
-                }),
-                const Expanded(child: SizedBox()),
                 doneButtonWidget(onPressed: saveImage),
               ],
             ),

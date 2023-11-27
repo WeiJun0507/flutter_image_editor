@@ -25,17 +25,10 @@ class _DrawingBoardState extends State<DrawingBoard> {
 
   void _addPoint(PointerEvent event, PointType type) {
     final Offset o = event.localPosition;
-    //SAVE POINT ONLY IF IT IS IN THE SPECIFIED BOUNDARIES
-    if ((o.dx > 0 && o.dx < widget.rect.width) &&
-        (o.dy > 0 && o.dy < widget.rect.height)) {
-      // IF USER LEFT THE BOUNDARY AND AND ALSO RETURNED BACK
-      // IN ONE MOVE, RETYPE IT AS TAP, AS WE DO NOT WANT TO
-      // LINK IT WITH PREVIOUS POINT
 
-      PointType t = type;
-      if (_isOutsideDrawField) {
-        t = PointType.tap;
-      }
+    //SAVE POINT ONLY IF IT IS IN THE SPECIFIED BOUNDARIES
+    if ((o.dx > widget.rect.left && o.dx < widget.rect.right) &&
+        (o.dy > widget.rect.top && o.dy < widget.rect.bottom)) {
 
       if (event is PointerDownEvent) {
         widget.controller.drawHistory.add(
@@ -45,17 +38,40 @@ class _DrawingBoardState extends State<DrawingBoard> {
           ),
         );
       }
+      // IF USER LEFT THE BOUNDARY AND AND ALSO RETURNED BACK
+      // IN ONE MOVE, RETYPE IT AS TAP, AS WE DO NOT WANT TO
+      // LINK IT WITH PREVIOUS POINT
 
-      setState(() {
-        //IF USER WAS OUTSIDE OF CANVAS WE WILL RESET THE HELPER VARIABLE AS HE HAS RETURNED
+      PointType t = type;
+      if (_isOutsideDrawField) {
+        t = PointType.tap;
+
         _isOutsideDrawField = false;
-        print("Check drawing offset: ${o}");
-        widget.controller.addPoint(Point(o, t, event.pointer));
-      });
+        widget.controller.drawHistory.add(
+          PointConfig(
+            drawRecord: [],
+            painterStyle: widget.controller.painterStyle,
+          ),
+        );
+      } else {
+        setState(() {
+          //IF USER WAS OUTSIDE OF CANVAS WE WILL RESET THE HELPER VARIABLE AS HE HAS RETURNED
+          widget.controller.addPoint(Point(o, t, event.pointer));
+        });
+      }
+
     } else {
       //NOTE: USER LEFT THE CANVAS!!! WE WILL SET HELPER VARIABLE
       //WE ARE NOT UPDATING IN setState METHOD BECAUSE WE DO NOT NEED TO RUN BUILD METHOD
-      _isOutsideDrawField = true;
+      if (event is PointerDownEvent && !_isOutsideDrawField) {
+        _isOutsideDrawField = true;
+      }
+
+      if (event is PointerMoveEvent && !_isOutsideDrawField) {
+        widget.controller.addPoint(Point(o, PointType.tap, event.pointer));
+        widget.controller.pushCurrentStateToUndoStack();
+        _isOutsideDrawField = true;
+      }
     }
   }
 

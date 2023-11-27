@@ -126,6 +126,7 @@ class DrawingController extends ChangeNotifier {
 
   /// REMEMBERS CURRENT CANVAS STATE IN UNDO STACK
   void pushCurrentStateToUndoStack() {
+    if (drawHistory.isEmpty) return;
     _latestActions.add(drawHistory.last);
     //CLEAR ANY UNDO-ED ACTIONS. IF USER UNDO-ED ANYTHING HE ALREADY MADE
     // ANOTHER CHANGE AND LEFT THAT OLD PATH.

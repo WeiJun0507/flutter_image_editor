@@ -169,6 +169,7 @@ class ImageEditorPainter extends CustomPainter {
           paintMosaic(
             canvas,
             size,
+            originalRect,
             isGeneratingResult ? cropRect : originalRect,
             point,
           );
