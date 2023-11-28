@@ -96,12 +96,12 @@ class ImageEditorState extends State<ImageEditor>
 
   double get headerHeight => windowStatusBarHeight;
 
-  double get bottomBarHeight => 105 + windowBottomBarHeight;
+  double get bottomBarHeight => 105;
 
   ///Edit area height.
-  double canvasHeight = 0.0;
-
-  double get canvasWidth => screenWidth;
+  // double canvasHeight = 0.0;
+  //
+  // double canvasWidth = 0.0;
 
   ///Operation panel button's horizontal space.
   Widget get controlBtnSpacing => 5.hGap;
@@ -125,7 +125,8 @@ class ImageEditorState extends State<ImageEditor>
 
     final finalPainter = ImageEditorPainter(
       panelController: panelController,
-      originalRect: Rect.fromLTWH(0, 0, screenWidth, canvasHeight),
+      originalRect: Rect.fromLTWH(
+          0, 0, widget.width.toDouble(), widget.height.toDouble()),
       cropRect: Rect.fromLTRB(
         topLeft.dx,
         topLeft.dy,
@@ -187,11 +188,23 @@ class ImageEditorState extends State<ImageEditor>
       _defaultLauncher.pStrockWidth,
     );
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      canvasHeight = min(
-        widget.height.toDouble(),
-        screenHeight - headerHeight - bottomBarHeight,
-      );
-      initClipper(screenWidth, canvasHeight, screenHeight - canvasHeight);
+      initClipper(screenWidth, widget.height.toDouble(),
+          screenHeight - widget.height.toDouble());
+    //   // if (widget.height > widget.width) {
+    //   //   canvasHeight = screenHeight - headerHeight - bottomBarHeight;
+    //   //   double hRatio = canvasHeight / widget.height;
+    //   //   canvasWidth = widget.width * hRatio;
+    //   //   if (canvasWidth > screenWidth) {
+    //   //     canvasWidth = screenWidth;
+    //   //   }
+    //   //
+    //   // } else {
+    //   //   canvasWidth = screenWidth;
+    //   //   canvasHeight = min(
+    //   //     widget.height.toDouble(),
+    //   //     screenHeight - headerHeight - bottomBarHeight,
+    //   //   );
+    //   // }
       if (mounted) setState(() {});
     });
   }
@@ -204,132 +217,138 @@ class ImageEditorState extends State<ImageEditor>
         (panelController.screenSize!.width - panelController.tcSize.width) / 2,
         panelController.trashCanPosition.dy);
 
-    double positionTop = (screenHeight - headerHeight - canvasHeight) / 2;
+    double positionTop = (screenHeight - widget.height) / 2;
     if (positionTop < headerHeight) positionTop = headerHeight;
 
-    return Material(
-      color: Colors.black,
-      child: Listener(
-        onPointerMove: panelController.pointerMoving,
-        child: Stack(
-          children: [
-            //appBar
-            ValueListenableBuilder<bool>(
-                valueListenable: panelController.showAppBar,
-                builder: (ctx, value, child) {
-                  return AnimatedPositioned(
-                      top: value ? 0 : -headerHeight,
-                      left: 0,
-                      right: 0,
-                      child: ValueListenableBuilder<bool>(
-                          valueListenable: panelController.takeShot,
-                          builder: (ctx, value, child) {
-                            return Opacity(
-                              opacity: value ? 0 : 1,
-                              child: AppBar(
-                                iconTheme: const IconThemeData(
-                                    color: Colors.white, size: 16),
-                                leading: backWidget(),
-                                backgroundColor: Colors.transparent,
-                                actions: <Widget>[
-                                  resetWidget(onTap: () {
-                                    resetCanvasPlate();
-                                    if (mounted) setState(() {});
-                                  }),
-                                ],
-                              ),
-                            );
-                          }),
-                      duration: panelController.panelDuration);
-                }),
-            //canvas
-            Positioned.fromRect(
-              rect: Rect.fromLTWH(
-                0,
-                positionTop,
-                screenWidth,
-                canvasHeight,
-              ),
-              child: Stack(
-                children: <Widget>[
-                  Positioned.fill(
-                    child: RepaintBoundary(
-                      key: _boundaryKey,
-                      child: CustomPaint(
-                        painter: ImageEditorPainter(
-                          panelController: panelController,
-                          originalRect:
-                              Rect.fromLTWH(0, 0, screenWidth, canvasHeight),
-                          cropRect: Rect.fromLTRB(
-                            topLeft.dx,
-                            topLeft.dy,
-                            bottomRight.dx,
-                            bottomRight.dy,
-                          ),
-                          image: widget.uiImage,
-                          drawHistory: operationHistory,
-                          isGeneratingResult: false,
-                        ),
-                        child: Stack(
-                          children: <Widget>[
-                            for (final model in textModels)
-                              buildTextComponent(model),
-                            if (panelController.operateType.value ==
-                                    OperateType.brush ||
-                                panelController.operateType.value ==
-                                    OperateType.mosaic)
-                              Positioned.fill(
-                                child: buildDrawingComponent(
-                                  Rect.fromLTRB(
-                                    topLeft.dx,
-                                    topLeft.dy,
-                                    bottomRight.dx,
-                                    bottomRight.dy,
-                                  ),
-                                  operationHistory,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (panelController.operateType.value == OperateType.clip)
-                    buildClipCover(context),
-                ],
-              ),
-            ),
-            //bottom operation(control) bar
-            ValueListenableBuilder<bool>(
-                valueListenable: panelController.showBottomBar,
-                builder: (ctx, value, child) {
-                  return AnimatedPositioned(
-                      bottom: value ? 0 : -bottomBarHeight,
-                      child: SizedBox(
-                        width: screenWidth,
+    return SafeArea(
+      child: Material(
+        color: Colors.black,
+        child: Listener(
+          onPointerMove: panelController.pointerMoving,
+          child: Stack(
+            children: [
+              //appBar
+              ValueListenableBuilder<bool>(
+                  valueListenable: panelController.showAppBar,
+                  builder: (ctx, value, child) {
+                    return AnimatedPositioned(
+                        top: value ? 0 : -headerHeight,
+                        left: 0,
+                        right: 0,
                         child: ValueListenableBuilder<bool>(
                             valueListenable: panelController.takeShot,
                             builder: (ctx, value, child) {
                               return Opacity(
                                 opacity: value ? 0 : 1,
-                                child: _buildControlBar(),
+                                child: AppBar(
+                                  iconTheme: const IconThemeData(
+                                      color: Colors.white, size: 16),
+                                  leading: backWidget(),
+                                  backgroundColor: Colors.transparent,
+                                  actions: <Widget>[
+                                    resetWidget(onTap: () {
+                                      resetCanvasPlate();
+                                      if (mounted) setState(() {});
+                                    }),
+                                  ],
+                                ),
                               );
                             }),
+                        duration: panelController.panelDuration);
+                  }),
+              //canvas
+              Positioned.fromRect(
+                rect: Rect.fromLTWH(
+                  0,
+                  positionTop,
+                  widget.width.toDouble(),
+                  widget.height.toDouble(),
+                ),
+                child: Stack(
+                  children: <Widget>[
+                    Positioned.fill(
+                      child: RepaintBoundary(
+                        key: _boundaryKey,
+                        child: CustomPaint(
+                          painter: ImageEditorPainter(
+                            panelController: panelController,
+                            originalRect: Rect.fromLTWH(
+                              0,
+                              0,
+                              widget.width.toDouble(),
+                              widget.height.toDouble(),
+                            ),
+                            cropRect: Rect.fromLTRB(
+                              topLeft.dx,
+                              topLeft.dy,
+                              bottomRight.dx,
+                              bottomRight.dy,
+                            ),
+                            image: widget.uiImage,
+                            drawHistory: operationHistory,
+                            isGeneratingResult: false,
+                          ),
+                          child: Stack(
+                            children: <Widget>[
+                              for (final model in textModels)
+                                buildTextComponent(model),
+                              if (panelController.operateType.value ==
+                                      OperateType.brush ||
+                                  panelController.operateType.value ==
+                                      OperateType.mosaic)
+                                Positioned.fill(
+                                  child: buildDrawingComponent(
+                                    Rect.fromLTRB(
+                                      topLeft.dx,
+                                      topLeft.dy,
+                                      bottomRight.dx,
+                                      bottomRight.dy,
+                                    ),
+                                    operationHistory,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                      duration: panelController.panelDuration);
-                }),
-            //trash bin
-            ValueListenableBuilder<bool>(
-                valueListenable: panelController.showTrashCan,
-                builder: (ctx, value, child) {
-                  return AnimatedPositioned(
-                      bottom:
-                          value ? panelController.trashCanPosition.dy : -100,
-                      left: panelController.trashCanPosition.dx,
-                      child: _buildTrashCan(),
-                      duration: panelController.panelDuration);
-                }),
-          ],
+                    ),
+                    if (panelController.operateType.value == OperateType.clip)
+                      buildClipCover(context),
+                  ],
+                ),
+              ),
+              //bottom operation(control) bar
+              ValueListenableBuilder<bool>(
+                  valueListenable: panelController.showBottomBar,
+                  builder: (ctx, value, child) {
+                    return AnimatedPositioned(
+                        bottom: value ? 0 : -bottomBarHeight,
+                        child: SizedBox(
+                          width: screenWidth,
+                          child: ValueListenableBuilder<bool>(
+                              valueListenable: panelController.takeShot,
+                              builder: (ctx, value, child) {
+                                return Opacity(
+                                  opacity: value ? 0 : 1,
+                                  child: _buildControlBar(),
+                                );
+                              }),
+                        ),
+                        duration: panelController.panelDuration);
+                  }),
+              //trash bin
+              ValueListenableBuilder<bool>(
+                  valueListenable: panelController.showTrashCan,
+                  builder: (ctx, value, child) {
+                    return AnimatedPositioned(
+                        bottom:
+                            value ? panelController.trashCanPosition.dy : -100,
+                        left: panelController.trashCanPosition.dx,
+                        child: _buildTrashCan(),
+                        duration: panelController.panelDuration);
+                  }),
+            ],
+          ),
         ),
       ),
     );
@@ -339,92 +358,85 @@ class ImageEditorState extends State<ImageEditor>
     return Container(
       color: Colors.black,
       width: screenWidth,
-      height: bottomBarHeight,
-      padding:
-          EdgeInsets.only(left: 16, right: 16, bottom: windowBottomBarHeight),
+      padding: EdgeInsets.only(left: 16, right: 16),
       child: Column(
         children: [
-          Expanded(
-            child: ValueListenableBuilder<OperateType>(
-              valueListenable: panelController.operateType,
-              builder: (ctx, value, child) {
-                return Opacity(
-                  opacity: panelController.show2ndPanel() ? 1 : 0,
+          ValueListenableBuilder<OperateType>(
+            valueListenable: panelController.operateType,
+            builder: (ctx, value, child) {
+              return Opacity(
+                opacity: panelController.show2ndPanel() ? 1 : 0,
+                child: Row(
+                  mainAxisAlignment: value == OperateType.brush
+                      ? MainAxisAlignment.spaceAround
+                      : MainAxisAlignment.end,
+                  children: [
+                    if (value == OperateType.brush)
+                      ...panelController.brushColor
+                          .map<Widget>((e) => ColorPicker(
+                                color: e,
+                                valueListenable: panelController.colorSelected,
+                                onColorSelected: (color) {
+                                  if (painterController.painterStyle.color ==
+                                      color.value) return;
+                                  changePainterColor(color);
+                                },
+                              ))
+                          .toList(),
+                    35.hGap,
+                    unDoWidget(onPressed: undo),
+                    if (value == OperateType.mosaic) 7.hGap,
+                  ],
+                ),
+              );
+            },
+          ),
+          20.vGap,
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
                   child: Row(
-                    mainAxisAlignment: value == OperateType.brush
-                        ? MainAxisAlignment.spaceAround
-                        : MainAxisAlignment.end,
                     children: [
-                      if (value == OperateType.brush)
-                        ...panelController.brushColor
-                            .map<Widget>((e) => ColorPicker(
-                                  color: e,
-                                  valueListenable:
-                                      panelController.colorSelected,
-                                  onColorSelected: (color) {
-                                    if (painterController.painterStyle.color ==
-                                        color.value) return;
-                                    changePainterColor(color);
-                                  },
-                                ))
-                            .toList(),
-                      35.hGap,
-                      unDoWidget(onPressed: undo),
-                      if (value == OperateType.mosaic) 7.hGap,
+                      _buildButton(OperateType.brush, 'Draw', onPressed: () {
+                        switchPainterMode(DrawStyle.normal);
+                        if (mounted) setState(() {});
+                      }),
+                      controlBtnSpacing,
+                      _buildButton(OperateType.mosaic, 'Mosaic', onPressed: () {
+                        switchPainterMode(DrawStyle.mosaic);
+                        if (mounted) setState(() {});
+                      }),
+                      controlBtnSpacing,
+                      _buildButton(OperateType.text, 'Text',
+                          onPressed: toTextEditorPage),
+                      controlBtnSpacing,
+                      // _buildButton(OperateType.flip, 'Flip', onPressed: () {
+                      //   flipCanvas();
+                      //   if (mounted) setState(() {});
+                      // }),
+                      // controlBtnSpacing,
+                      // _buildButton(
+                      //   OperateType.rotated,
+                      //   'Rotate',
+                      //   onPressed: () {
+                      //     rotateCanvasPlate();
+                      //     if (mounted) setState(() {});
+                      //   },
+                      // ),
+                      // controlBtnSpacing,
+                      _buildButton(
+                        OperateType.clip,
+                        'Clip',
+                        onPressed: !mounted ? null : () => setState(() {}),
+                      ),
                     ],
                   ),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildButton(OperateType.brush, 'Draw', onPressed: () {
-                          switchPainterMode(DrawStyle.normal);
-                          if (mounted) setState(() {});
-                        }),
-                        controlBtnSpacing,
-                        _buildButton(OperateType.mosaic, 'Mosaic',
-                            onPressed: () {
-                          switchPainterMode(DrawStyle.mosaic);
-                          if (mounted) setState(() {});
-                        }),
-                        controlBtnSpacing,
-                        _buildButton(OperateType.text, 'Text',
-                            onPressed: toTextEditorPage),
-                        controlBtnSpacing,
-                        _buildButton(OperateType.flip, 'Flip', onPressed: () {
-                          flipCanvas();
-                          if (mounted) setState(() {});
-                        }),
-                        controlBtnSpacing,
-                        _buildButton(
-                          OperateType.rotated,
-                          'Rotate',
-                          onPressed: () {
-                            rotateCanvasPlate();
-                            if (mounted) setState(() {});
-                          },
-                        ),
-                        controlBtnSpacing,
-                        _buildButton(
-                          OperateType.clip,
-                          'Clip',
-                          onPressed: !mounted ? null : () => setState(() {}),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
-                doneButtonWidget(onPressed: saveImage),
-              ],
-            ),
+              ),
+              doneButtonWidget(onPressed: saveImage),
+            ],
           )
         ],
       ),

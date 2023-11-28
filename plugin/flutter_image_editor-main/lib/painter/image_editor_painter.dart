@@ -28,6 +28,9 @@ class ImageEditorPainter extends CustomPainter {
   /// Temp Picture is used to get the paint layer of [text, draw, crop] operation
   ui.Picture? tempPicture;
 
+  /// Clip Rect display picture where its image is according to the cropRect
+  ui.Picture? clipPicture;
+
   /// Used to record when drawHistory too much, remove the first N and generate a picture using [PictureRecorder]
   ui.Picture? bigPicture;
 
@@ -135,6 +138,19 @@ class ImageEditorPainter extends CustomPainter {
       tempPicture = layerRecorder.endRecording();
     }
 
+    /// 渲染裁切范围
+    if (!isGeneratingResult) {
+      ui.PictureRecorder clipRecorder = ui.PictureRecorder();
+      Canvas clipCanvas = Canvas(clipRecorder);
+      clipCanvas.drawImageRect(
+        image,
+        cropRect,
+        cropRect,
+        croppedImgPaint,
+      );
+      clipPicture = clipRecorder.endRecording();
+    }
+
     if (bigPicture == null) {
       final ui.PictureRecorder recorder = ui.PictureRecorder();
       final backgroundCanvas = Canvas(recorder);
@@ -148,8 +164,6 @@ class ImageEditorPainter extends CustomPainter {
 
       if (!isGeneratingResult) {
         backgroundCanvas.drawImage(image, Offset.zero, imgCoverPaint);
-        backgroundCanvas.drawImageRect(
-            image, cropRect, cropRect, croppedImgPaint);
       } else {
         backgroundCanvas.drawImageRect(
           image,
@@ -172,10 +186,15 @@ class ImageEditorPainter extends CustomPainter {
       canvas.drawPicture(bigPicture!);
     }
 
+    if (clipPicture != null) {
+      canvas.drawPicture(clipPicture!);
+    }
+
     /// Step 2: draw the remaining operation
     if (tempPicture != null) {
       canvas.drawPicture(tempPicture!);
     }
+
 
     // canvas.save();
     //

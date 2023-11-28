@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:image_editor/flutter_image_editor.dart';
@@ -71,16 +72,47 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  final bytes = await getImageBytes('assets/images/icon.png');
-                  ui.Image uiImage =
-                      await getUiImageWithoutSize('assets/images/icon.png');
+                  final bytes =
+                      await getImageBytes('assets/images/long-img.webp');
+                  ui.Image uiImage = await getUiImageWithoutSize(
+                      'assets/images/long-img.webp');
                   final screenWidth = MediaQuery.of(context).size.width;
-                  final widthDiff = screenWidth / uiImage.width;
-                  final desireHeight = uiImage.height * widthDiff;
+                  final screenHeight = MediaQuery.of(context).size.height;
+                  final viewPadding = MediaQuery.of(context).viewPadding;
+
+                  // final widthDiff = screenWidth / uiImage.width;
+                  // final desireHeight = uiImage.height * widthDiff;
+
+                  double canvasHeight = 0.0;
+                  double canvasWidth = 0.0;
+                  if (uiImage.height > uiImage.width) {
+                    canvasHeight = screenHeight -
+                        viewPadding.top -
+                        viewPadding.bottom -
+                        (kToolbarHeight * 3);
+                    final hRatio = canvasHeight / uiImage.height;
+                    if (uiImage.width * hRatio > screenWidth) {
+                      final minusRatio = uiImage.width * hRatio / screenWidth;
+                      canvasHeight = canvasHeight / minusRatio;
+                      canvasWidth = math.min(uiImage.width * hRatio, screenWidth);
+                    }
+
+                  } else {
+                    canvasWidth = screenWidth;
+                    canvasHeight = math.min(
+                      uiImage.height.toDouble(),
+                      screenHeight - viewPadding.top - viewPadding.bottom,
+                    );
+                  }
+
                   uiImage = await getUiImageWithSize(
-                      bytes, screenWidth, desireHeight);
-                  final file =
-                      File('${(await getTemporaryDirectory()).path}/logo.png');
+                    bytes,
+                    canvasHeight,
+                    canvasWidth,
+                  );
+
+                  final file = File(
+                      '${(await getTemporaryDirectory()).path}/long-img.webp');
                   await file.create(recursive: true);
                   await file.writeAsBytes(bytes.buffer
                       .asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
