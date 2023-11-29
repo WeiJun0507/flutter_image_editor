@@ -190,21 +190,6 @@ class ImageEditorState extends State<ImageEditor>
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       initClipper(screenWidth, widget.height.toDouble(),
           screenHeight - widget.height.toDouble());
-    //   // if (widget.height > widget.width) {
-    //   //   canvasHeight = screenHeight - headerHeight - bottomBarHeight;
-    //   //   double hRatio = canvasHeight / widget.height;
-    //   //   canvasWidth = widget.width * hRatio;
-    //   //   if (canvasWidth > screenWidth) {
-    //   //     canvasWidth = screenWidth;
-    //   //   }
-    //   //
-    //   // } else {
-    //   //   canvasWidth = screenWidth;
-    //   //   canvasHeight = min(
-    //   //     widget.height.toDouble(),
-    //   //     screenHeight - headerHeight - bottomBarHeight,
-    //   //   );
-    //   // }
       if (mounted) setState(() {});
     });
   }
