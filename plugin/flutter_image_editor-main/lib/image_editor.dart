@@ -217,8 +217,8 @@ class ImageEditorState extends State<ImageEditor>
         (panelController.screenSize!.width - panelController.tcSize.width) / 2,
         panelController.trashCanPosition.dy);
 
-    double positionTop = (screenHeight - widget.height) / 2;
-    if (positionTop < headerHeight) positionTop = headerHeight;
+    double positionTop = ((screenHeight - widget.height) / 2) - kToolbarHeight;
+    if (positionTop > headerHeight) positionTop = headerHeight;
 
     return SafeArea(
       child: Material(
