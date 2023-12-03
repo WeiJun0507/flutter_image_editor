@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -86,6 +85,7 @@ class ImageEditorState extends State<ImageEditor>
         TextCanvasBinding,
         RotateCanvasBinding,
         ClipCanvasBinding,
+        ScaleCanvasBinding,
         LittleWidgetBinding,
         WindowUiBinding {
   final EditorPanelController panelController = EditorPanelController();
@@ -245,58 +245,66 @@ class ImageEditorState extends State<ImageEditor>
                   widget.width,
                   widget.height,
                 ),
-                child: Stack(
-                  children: <Widget>[
-                    Positioned.fill(
-                      child: RepaintBoundary(
-                        key: _boundaryKey,
-                        child: CustomPaint(
-                          painter: ImageEditorPainter(
-                            panelController: panelController,
-                            originalRect: Rect.fromLTWH(
-                              0,
-                              0,
-                              widget.width,
-                              widget.height,
+                child: InteractiveViewer(
+                  minScale: 1.0,
+                  maxScale: 5.0,
+                  child: Stack(
+                    children: <Widget>[
+                      Positioned.fill(
+                        child: RepaintBoundary(
+                          key: _boundaryKey,
+                          child: CustomPaint(
+                            painter: ImageEditorPainter(
+                              panelController: panelController,
+                              originalRect: Rect.fromLTWH(
+                                0,
+                                0,
+                                widget.width,
+                                widget.height,
+                              ),
+                              cropRect: Rect.fromLTRB(
+                                topLeft.dx,
+                                topLeft.dy,
+                                bottomRight.dx,
+                                bottomRight.dy,
+                              ),
+                              image: widget.uiImage,
+                              resizeImage: widget.resizeUiImage,
+                              drawHistory: operationHistory,
+                              isGeneratingResult: false,
                             ),
-                            cropRect: Rect.fromLTRB(
-                              topLeft.dx,
-                              topLeft.dy,
-                              bottomRight.dx,
-                              bottomRight.dy,
-                            ),
-                            image: widget.uiImage,
-                            resizeImage: widget.resizeUiImage,
-                            drawHistory: operationHistory,
-                            isGeneratingResult: false,
-                          ),
-                          child: Stack(
-                            children: <Widget>[
-                              for (final model in textModels)
-                                buildTextComponent(model),
-                              if (panelController.operateType.value ==
-                                      OperateType.brush ||
-                                  panelController.operateType.value ==
-                                      OperateType.mosaic)
-                                Positioned.fill(
-                                  child: buildDrawingComponent(
-                                    Rect.fromLTRB(
-                                      topLeft.dx,
-                                      topLeft.dy,
-                                      bottomRight.dx,
-                                      bottomRight.dy,
+                            child: Stack(
+                              children: <Widget>[
+                                for (final model in textModels)
+                                  buildTextComponent(model),
+                                if (panelController.operateType.value ==
+                                        OperateType.brush ||
+                                    panelController.operateType.value ==
+                                        OperateType.mosaic)
+                                  Positioned.fill(
+                                    child: buildDrawingComponent(
+                                      Rect.fromLTRB(
+                                        topLeft.dx,
+                                        topLeft.dy,
+                                        bottomRight.dx,
+                                        bottomRight.dy,
+                                      ),
+                                      operationHistory,
                                     ),
-                                    operationHistory,
                                   ),
-                                ),
-                            ],
+                                if (panelController.operateType.value ==
+                                    OperateType.clip)
+                                  buildClipCover(context),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    if (panelController.operateType.value == OperateType.clip)
-                      buildClipCover(context),
-                  ],
+
+                      // if (panelController.operateType.value == OperateType.non)
+                      //   buildScaleCover(context),
+                    ],
+                  ),
                 ),
               ),
               //bottom operation(control) bar
@@ -404,19 +412,19 @@ class ImageEditorState extends State<ImageEditor>
                         if (mounted) setState(() {});
                       }),
                       controlBtnSpacing,
-                      _buildButton(
-                        OperateType.rotated,
-                        'Rotate',
-                        onPressed: () {
-                          rotateCanvasPlate();
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                      controlBtnSpacing,
+                      // _buildButton(
+                      //   OperateType.rotated,
+                      //   'Rotate',
+                      //   onPressed: () {
+                      //     rotateCanvasPlate();
+                      //     if (mounted) setState(() {});
+                      //   },
+                      // ),
+                      // controlBtnSpacing,
                       _buildButton(
                         OperateType.clip,
                         'Clip',
-                        onPressed: !mounted ? null : () => setState(() {}),
+                        onPressed: () => onClipTap(context),
                       ),
                     ],
                   ),
@@ -463,10 +471,7 @@ class ImageEditorState extends State<ImageEditor>
 
   Widget _buildButton(OperateType type, String txt, {VoidCallback? onPressed}) {
     return GestureDetector(
-      onTap: () {
-        panelController.switchOperateType(type);
-        onPressed?.call();
-      },
+      onTap: onPressed,
       child: ValueListenableBuilder(
         valueListenable: panelController.operateType,
         builder: (ctx, value, child) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_editor/extension/general_binding.dart';
 import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/painter/crop_layer_painter.dart';
+import 'package:image_editor/widget/editor_panel_controller.dart';
 
 /// Rotation and Flip features Binding class which holds rotate value and flip value
 /// The value will be used to effect on canvas when drawing the image and
@@ -174,6 +175,17 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
     }
   }
 
+  /// on clip option tap
+  void onClipTap(BuildContext context) {
+    if (realState?.panelController.operateType.value == OperateType.clip) {
+      realState?.panelController.operateType.value = OperateType.non;
+    } else {
+      realState?.panelController.operateType.value = OperateType.clip;
+    }
+
+    if (mounted) setState(() {});
+  }
+
   Widget buildClipCover(BuildContext context) {
     return Positioned.fill(
       child: CustomPaint(
@@ -258,6 +270,33 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+mixin ScaleCanvasBinding<T extends StatefulWidget> on State<T> {
+  /// final Panned Offset
+  Offset pannedOffset = Offset.zero;
+
+  /// Delta Offset indicates how much distance did the user pan
+  Offset deltaOffset = Offset.zero;
+
+  double scale = 1.0;
+
+  void onScaleUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount > 1) {
+      setState(() {
+        scale = details.scale;
+      });
+    }
+  }
+
+  Widget buildScaleCover(BuildContext context) {
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onScaleUpdate: onScaleUpdate,
       ),
     );
   }

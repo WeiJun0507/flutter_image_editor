@@ -344,16 +344,9 @@ class ImageEditorPainter extends CustomPainter {
     final unusedRightPath = Path();
     final unusedBottomPath = Path();
 
-    final Size rotatedSize = Size(
-      direction == RotateDirection.top || direction == RotateDirection.bottom
-          ? size.width
-          : size.height,
-      direction == RotateDirection.top || direction == RotateDirection.bottom
-          ? size.height
-          : size.width,
-    );
-
     /// Q: When rotate to either direction left or right, the path cannot cover the whole width
+    /// A: Wrong design. Cropped path doesn't mean it should dependents to the rotation degree.
+    /// When user has rotated the canvas, let the crop to be rotated as well.
 
     /// Draw top unused path
     /// The path is first moving downward,
