@@ -49,28 +49,26 @@ class CanvasLauncher {
 class ImageEditor extends StatefulWidget {
   const ImageEditor({
     Key? key,
-    required this.originImage,
     required this.uiImage,
+    required this.resizeUiImage,
     required this.width,
     required this.height,
     this.savePath,
   }) : super(key: key);
 
-  ///origin image
-  /// * input for edit
-  final File originImage;
-
   final ui.Image uiImage;
+
+  final ui.Image resizeUiImage;
 
   ///edited-file's save path.
   /// * if null will save in temporary file.
   final Directory? savePath;
 
   /// Image Width
-  final int width;
+  final double width;
 
   /// Image Height
-  final int height;
+  final double height;
 
   ///[uiDelegate] is determine the editor's ui style.
   ///You can extends [ImageEditorDelegate] and custome it by youself.
@@ -98,11 +96,6 @@ class ImageEditorState extends State<ImageEditor>
 
   double get bottomBarHeight => 105;
 
-  ///Edit area height.
-  // double canvasHeight = 0.0;
-  //
-  // double canvasWidth = 0.0;
-
   ///Operation panel button's horizontal space.
   Widget get controlBtnSpacing => 5.hGap;
 
@@ -123,55 +116,58 @@ class ImageEditorState extends State<ImageEditor>
   void saveImage() async {
     panelController.takeShot.value = true;
 
-    final finalPainter = ImageEditorPainter(
-      panelController: panelController,
-      originalRect: Rect.fromLTWH(
-          0, 0, widget.width.toDouble(), widget.height.toDouble()),
-      cropRect: Rect.fromLTRB(
-        topLeft.dx,
-        topLeft.dy,
-        bottomRight.dx,
-        bottomRight.dy,
-      ),
-      image: widget.uiImage,
-      drawHistory: operationHistory,
-      isGeneratingResult: true,
-    );
-    ui.PictureRecorder recorder = ui.PictureRecorder();
-    Canvas canvas = Canvas(recorder);
-
-    // Make sure to apply scaling to the DPR of the window, since the framework will be scaling this picture normally in the layer tree
-    canvas.save();
-    canvas.scale(View.of(context).devicePixelRatio);
-
-    final imgSize =
-        Size(bottomRight.dx - topLeft.dx, bottomRight.dy - topLeft.dy);
-    finalPainter.paint(canvas, imgSize);
-
-    canvas.restore();
-    final finalWidth = imgSize.width * View.of(context).devicePixelRatio;
-    final finalHeight = imgSize.height * View.of(context).devicePixelRatio;
-
-    final ui.Image recordedImg = await recorder
-        .endRecording()
-        .toImage(finalWidth.toInt(), finalHeight.toInt());
-
-    final ByteData? imgBytes =
-        await recordedImg.toByteData(format: ui.ImageByteFormat.png);
-    if (imgBytes != null) {
-      final pngBytes = imgBytes.buffer.asUint8List();
-      final paths = widget.savePath ?? await getTemporaryDirectory();
-      final file = await File('${paths.path}/' +
-              md5.convert(utf8.encode(DateTime.now().toString())).toString() +
-              '.jpg')
-          .create();
-      file.writeAsBytes(pngBytes);
-      Navigator.pop(
-        context,
-        EditorImageResult(finalWidth.toInt(), finalHeight.toInt(), file),
+    try {
+      final finalPainter = ImageEditorPainter(
+        panelController: panelController,
+        originalRect: Rect.fromLTWH(0, 0, widget.width, widget.height),
+        cropRect: Rect.fromLTRB(
+          topLeft.dx,
+          topLeft.dy,
+          bottomRight.dx,
+          bottomRight.dy,
+        ),
+        image: widget.uiImage,
+        resizeImage: widget.resizeUiImage,
+        drawHistory: operationHistory,
+        isGeneratingResult: true,
       );
-    } else {
-      print("Error");
+      ui.PictureRecorder recorder = ui.PictureRecorder();
+      Canvas canvas = Canvas(recorder);
+
+      // Make sure to apply scaling to the DPR of the window, since the framework will be scaling this picture normally in the layer tree
+      canvas.scale(View.of(context).devicePixelRatio);
+
+      final imgSize =
+          Size(bottomRight.dx - topLeft.dx, bottomRight.dy - topLeft.dy);
+      finalPainter.paint(canvas, imgSize);
+
+      final finalWidth = imgSize.width * View.of(context).devicePixelRatio;
+      final finalHeight = imgSize.height * View.of(context).devicePixelRatio;
+
+      final ui.Image recordedImg = await recorder
+          .endRecording()
+          .toImage(finalWidth.toInt(), finalHeight.toInt());
+
+      final ByteData? imgBytes =
+          await recordedImg.toByteData(format: ui.ImageByteFormat.png);
+      if (imgBytes != null) {
+        final pngBytes = imgBytes.buffer.asUint8List();
+        final paths = widget.savePath ?? await getTemporaryDirectory();
+        final file = await File('${paths.path}/' +
+                md5.convert(utf8.encode(DateTime.now().toString())).toString() +
+                '.jpg')
+            .create();
+        file.writeAsBytesSync(pngBytes);
+        Navigator.pop(
+          context,
+          EditorImageResult(finalWidth.toInt(), finalHeight.toInt(), file),
+        );
+      } else {
+        print("Error");
+      }
+    } catch (e) {
+      print("On Save Image error: ${e}");
+      Navigator.pop(context);
     }
   }
 
@@ -188,8 +184,8 @@ class ImageEditorState extends State<ImageEditor>
       _defaultLauncher.pStrockWidth,
     );
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      initClipper(screenWidth, widget.height.toDouble(),
-          screenHeight - widget.height.toDouble());
+      initClipper(widget.width, widget.height, headerHeight);
+      print("check img edit size: ${widget.width} | ${widget.height}");
       if (mounted) setState(() {});
     });
   }
@@ -203,7 +199,7 @@ class ImageEditorState extends State<ImageEditor>
         panelController.trashCanPosition.dy);
 
     double positionTop = ((screenHeight - widget.height) / 2) - kToolbarHeight;
-    if (positionTop > headerHeight) positionTop = headerHeight;
+    double positionLeft = ((screenWidth - widget.width) / 2);
 
     return SafeArea(
       child: Material(
@@ -244,10 +240,10 @@ class ImageEditorState extends State<ImageEditor>
               //canvas
               Positioned.fromRect(
                 rect: Rect.fromLTWH(
-                  0,
+                  positionLeft,
                   positionTop,
-                  widget.width.toDouble(),
-                  widget.height.toDouble(),
+                  widget.width,
+                  widget.height,
                 ),
                 child: Stack(
                   children: <Widget>[
@@ -260,8 +256,8 @@ class ImageEditorState extends State<ImageEditor>
                             originalRect: Rect.fromLTWH(
                               0,
                               0,
-                              widget.width.toDouble(),
-                              widget.height.toDouble(),
+                              widget.width,
+                              widget.height,
                             ),
                             cropRect: Rect.fromLTRB(
                               topLeft.dx,
@@ -270,6 +266,7 @@ class ImageEditorState extends State<ImageEditor>
                               bottomRight.dy,
                             ),
                             image: widget.uiImage,
+                            resizeImage: widget.resizeUiImage,
                             drawHistory: operationHistory,
                             isGeneratingResult: false,
                           ),
@@ -369,7 +366,12 @@ class ImageEditorState extends State<ImageEditor>
                               ))
                           .toList(),
                     35.hGap,
-                    unDoWidget(onPressed: undo),
+                    unDoWidget(
+                      onPressed: () {
+                        operationHistory.removeLast();
+                        if (mounted) setState(() {});
+                      },
+                    ),
                     if (value == OperateType.mosaic) 7.hGap,
                   ],
                 ),
@@ -397,20 +399,20 @@ class ImageEditorState extends State<ImageEditor>
                       _buildButton(OperateType.text, 'Text',
                           onPressed: toTextEditorPage),
                       controlBtnSpacing,
-                      // _buildButton(OperateType.flip, 'Flip', onPressed: () {
-                      //   flipCanvas();
-                      //   if (mounted) setState(() {});
-                      // }),
-                      // controlBtnSpacing,
-                      // _buildButton(
-                      //   OperateType.rotated,
-                      //   'Rotate',
-                      //   onPressed: () {
-                      //     rotateCanvasPlate();
-                      //     if (mounted) setState(() {});
-                      //   },
-                      // ),
-                      // controlBtnSpacing,
+                      _buildButton(OperateType.flip, 'Flip', onPressed: () {
+                        flipCanvas();
+                        if (mounted) setState(() {});
+                      }),
+                      controlBtnSpacing,
+                      _buildButton(
+                        OperateType.rotated,
+                        'Rotate',
+                        onPressed: () {
+                          rotateCanvasPlate();
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                      controlBtnSpacing,
                       _buildButton(
                         OperateType.clip,
                         'Clip',

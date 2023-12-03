@@ -15,13 +15,7 @@ enum PointType {
   move,
 }
 
-enum operationType {
-  draw,
-  text,
-  crop,
-  flip,
-  rotate
-}
+enum operationType { draw, text, crop, flip, rotate }
 
 class PaintOperation {
   final operationType type;
@@ -96,7 +90,6 @@ class PointConfig {
   });
 }
 
-
 /// Text Model
 class FloatTextModel {
   String text;
@@ -143,10 +136,22 @@ class FloatTextModel {
   }
 }
 
+/// This enum states the current rotate direction
+/// [RotateDirection.top] will be the original states and when the value changes,
+/// the rotate direction will change accordingly
+/// -> [RotateDirection.left] -> [RotateDirection.bottom] -> [RotateDirection.right]
+enum RotateDirection {
+  left,
+  top,
+  right,
+  bottom,
+}
+
 class RotateInfo {
   final double radians;
+  final RotateDirection direction;
 
-  RotateInfo({required this.radians});
+  RotateInfo({required this.radians, required this.direction});
 }
 
 class FlipInfo {

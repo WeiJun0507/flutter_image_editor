@@ -76,55 +76,57 @@ class _MyHomePageState extends State<MyHomePage> {
                       await getImageBytes('assets/images/long-img.webp');
                   ui.Image uiImage = await getUiImageWithoutSize(
                       'assets/images/long-img.webp');
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  final screenHeight = MediaQuery.of(context).size.height;
-                  final viewPadding = MediaQuery.of(context).viewPadding;
-
-                  // final widthDiff = screenWidth / uiImage.width;
-                  // final desireHeight = uiImage.height * widthDiff;
-
                   double canvasHeight = 0.0;
                   double canvasWidth = 0.0;
+                  final screenHeight = MediaQuery.of(context).size.height;
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final viewPadding = View.of(context).viewPadding;
+
+                  final maxHeight = screenHeight -
+                      viewPadding.top -
+                      viewPadding.bottom -
+                      (kToolbarHeight * 3);
+
                   if (uiImage.height > uiImage.width) {
-                    canvasHeight = screenHeight -
-                        viewPadding.top -
-                        viewPadding.bottom -
-                        (kToolbarHeight * 3);
+                    canvasHeight = maxHeight;
                     final hRatio = canvasHeight / uiImage.height;
                     if (uiImage.width * hRatio > screenWidth) {
                       final minusRatio = uiImage.width * hRatio / screenWidth;
                       canvasHeight = canvasHeight / minusRatio;
-                      canvasWidth = math.min(uiImage.width * hRatio, screenWidth);
+                      canvasWidth =
+                          math.min(uiImage.width * hRatio, screenWidth);
+                    } else {
+                      canvasWidth =
+                          math.min(uiImage.width * hRatio, screenWidth);
                     }
-
                   } else {
                     canvasWidth = screenWidth;
-                    canvasHeight = math.min(
-                      uiImage.height.toDouble(),
-                      screenHeight - viewPadding.top - viewPadding.bottom,
-                    );
+                    final wRatio = canvasWidth / uiImage.width;
+                    if (uiImage.height * wRatio > maxHeight) {
+                      final minusRatio = uiImage.height * wRatio / maxHeight;
+                      canvasWidth = canvasWidth / minusRatio;
+                      canvasHeight =
+                          math.min(uiImage.height * wRatio, maxHeight);
+                    } else {
+                      canvasHeight =
+                          math.min(uiImage.height * wRatio, maxHeight);
+                    }
                   }
 
-                  uiImage = await getUiImageWithSize(
+                  final resizeUiImage = await getUiImageWithSize(
                     bytes,
                     canvasHeight,
                     canvasWidth,
                   );
 
-                  final file = File(
-                      '${(await getTemporaryDirectory()).path}/long-img.webp');
-                  await file.create(recursive: true);
-                  await file.writeAsBytes(bytes.buffer
-                      .asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
-
                   Navigator.of(context)
                       .push(
                     MaterialPageRoute(
                       builder: (BuildContext context) => ImageEditor(
-                        originImage: file,
                         uiImage: uiImage,
-                        width: uiImage.width,
-                        height: uiImage.height,
+                        resizeUiImage: resizeUiImage,
+                        width: canvasWidth,
+                        height: canvasHeight,
                       ),
                     ),
                   )

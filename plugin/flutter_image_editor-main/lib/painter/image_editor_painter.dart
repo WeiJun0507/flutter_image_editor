@@ -11,6 +11,7 @@ class ImageEditorPainter extends CustomPainter {
   final Rect originalRect;
   final Rect cropRect;
   final ui.Image image;
+  final ui.Image resizeImage;
 
   final List<PaintOperation> drawHistory;
 
@@ -21,6 +22,7 @@ class ImageEditorPainter extends CustomPainter {
     required this.originalRect,
     required this.cropRect,
     required this.image,
+    required this.resizeImage,
     required this.drawHistory,
     required this.isGeneratingResult,
   });
@@ -46,8 +48,12 @@ class ImageEditorPainter extends CustomPainter {
       ..filterQuality = FilterQuality.high
       ..isAntiAlias = true;
 
+    /// Flip Variable
     double flipValue = 0;
+
+    /// Rotation Variable
     double rotateRadians = 0;
+    RotateDirection direction = RotateDirection.top;
 
     ui.Picture? limitPicture;
 
@@ -60,9 +66,14 @@ class ImageEditorPainter extends CustomPainter {
           final history = drawHistory[i];
           switch (history.type) {
             case operationType.rotate:
+
+              /// todo: canvas have to do rotation
               rotateRadians = history.data.radians;
+              direction = history.data.direction;
               break;
             case operationType.flip:
+
+              /// todo: canvas have to do flip action
               flipValue = history.data.flipRadians;
               break;
             case operationType.draw:
@@ -102,9 +113,14 @@ class ImageEditorPainter extends CustomPainter {
       for (int i = 0; i < drawHistory.length; i++) {
         switch (drawHistory[i].type) {
           case operationType.rotate:
+
+            /// todo: canvas have to do rotation
             rotateRadians = drawHistory[i].data.radians;
+            direction = drawHistory[i].data.direction;
             break;
           case operationType.flip:
+
+            /// todo: canvas have to do rotation
             flipValue = drawHistory[i].data.flipRadians;
             break;
           case operationType.draw:
@@ -138,35 +154,20 @@ class ImageEditorPainter extends CustomPainter {
       tempPicture = layerRecorder.endRecording();
     }
 
-    /// 渲染裁切范围
-    if (!isGeneratingResult) {
-      ui.PictureRecorder clipRecorder = ui.PictureRecorder();
-      Canvas clipCanvas = Canvas(clipRecorder);
-      clipCanvas.drawImageRect(
-        image,
-        cropRect,
-        cropRect,
-        croppedImgPaint,
-      );
-      clipPicture = clipRecorder.endRecording();
-    }
-
     if (bigPicture == null) {
       final ui.PictureRecorder recorder = ui.PictureRecorder();
       final backgroundCanvas = Canvas(recorder);
 
-      backgroundCanvas.save();
-
-      backgroundCanvas.translate(size.width / 2, size.height / 2);
-      backgroundCanvas.rotate(rotateRadians);
-      backgroundCanvas.transform(Matrix4.rotationY(flipValue).storage);
-      backgroundCanvas.translate(-(size.width / 2), -(size.height / 2));
-
       if (!isGeneratingResult) {
-        backgroundCanvas.drawImage(image, Offset.zero, imgCoverPaint);
+        paintImage(
+          canvas: backgroundCanvas,
+          rect: originalRect,
+          image: image,
+          fit: BoxFit.contain,
+        );
       } else {
         backgroundCanvas.drawImageRect(
-          image,
+          resizeImage,
           cropRect,
           Rect.fromLTWH(0.0, 0.0, size.width, size.height),
           croppedImgPaint,
@@ -177,24 +178,32 @@ class ImageEditorPainter extends CustomPainter {
         backgroundCanvas.drawPicture(limitPicture);
       }
 
-      backgroundCanvas.restore();
       bigPicture = recorder.endRecording();
     }
 
-    /// Step 1: always paint the bigPicture
+    /// Rotate and Flip the drawing canvas
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.rotate(rotateRadians);
+    canvas.transform(Matrix4.rotationY(flipValue).storage);
+    canvas.translate(-(size.width / 2), -(size.height / 2));
+
+    /// Step 2: always paint the bigPicture
     if (bigPicture != null) {
       canvas.drawPicture(bigPicture!);
     }
 
-    if (clipPicture != null) {
-      canvas.drawPicture(clipPicture!);
-    }
-
-    /// Step 2: draw the remaining operation
+    /// Step 3: draw the remaining operation
     if (tempPicture != null) {
       canvas.drawPicture(tempPicture!);
     }
 
+    /// Reset rotate and translate
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.rotate(-rotateRadians);
+    canvas.transform(Matrix4.rotationY(-flipValue).storage);
+    canvas.translate(-(size.width / 2), -(size.height / 2));
+
+    drawUnwantedPath(canvas, size, cropRect, imgCoverPaint, direction);
 
     // canvas.save();
     //
@@ -269,10 +278,11 @@ class ImageEditorPainter extends CustomPainter {
         minWidth: 0,
         maxWidth: size.width,
       );
-      // 1. get dx diff from text to the crop size
+
+      /// 1. get dx diff from text to the crop size
       final widthDiff = item.left - cropTopLeftOffset.dx;
 
-      // 2. get dy diff from text to the crop size
+      /// 2. get dy diff from text to the crop size
       final heightDiff = item.top - cropTopLeftOffset.dy;
 
       final offset = Offset(widthDiff, heightDiff);
@@ -320,6 +330,74 @@ class ImageEditorPainter extends CustomPainter {
       case DrawStyle.non:
         break;
     }
+  }
+
+  void drawUnwantedPath(
+    Canvas canvas,
+    Size size,
+    Rect cropRect,
+    Paint painter,
+    RotateDirection direction,
+  ) {
+    final unusedTopPath = Path();
+    final unusedLeftPath = Path();
+    final unusedRightPath = Path();
+    final unusedBottomPath = Path();
+
+    final Size rotatedSize = Size(
+      direction == RotateDirection.top || direction == RotateDirection.bottom
+          ? size.width
+          : size.height,
+      direction == RotateDirection.top || direction == RotateDirection.bottom
+          ? size.height
+          : size.width,
+    );
+
+    /// Q: When rotate to either direction left or right, the path cannot cover the whole width
+
+    /// Draw top unused path
+    /// The path is first moving downward,
+    /// then move to the size.width, back to y-axis 0, and close the path
+    unusedTopPath.moveTo(0.0, 0.0);
+    unusedTopPath.lineTo(rotatedSize.width, 0.0);
+    unusedTopPath.lineTo(rotatedSize.width, cropRect.top);
+    unusedTopPath.lineTo(0.0, cropRect.top);
+    unusedTopPath.close();
+
+    /// Draw left unused path
+    /// Path is first moving to the right,
+    /// then move to the rotatedSize.height, back to x-axis 0, and close the path
+    unusedLeftPath.moveTo(0.0, cropRect.top);
+    unusedLeftPath.relativeLineTo(cropRect.left, 0.0);
+    unusedLeftPath.relativeLineTo(0.0, cropRect.bottom - cropRect.top);
+    unusedLeftPath.relativeLineTo(-cropRect.left, 0.0);
+    unusedLeftPath.close();
+
+    /// moving canvas position to the right rotatedSize
+    unusedRightPath.moveTo(rotatedSize.width, cropRect.top);
+
+    /// Draw right unused path
+    /// Path is first moving to the right,
+    /// then move to the canvas height, lastly move the canvas back to the right path
+    /// close the path.
+    unusedRightPath.relativeLineTo(-(rotatedSize.width - cropRect.right), 0.0);
+    unusedRightPath.relativeLineTo(0.0, cropRect.bottom - cropRect.top);
+    unusedRightPath.relativeLineTo(rotatedSize.width - cropRect.right, 0.0);
+    unusedRightPath.close();
+
+    /// Draw bottom unused path
+    unusedBottomPath.moveTo(0.0, cropRect.bottom);
+    unusedBottomPath.lineTo(0.0, rotatedSize.height);
+    unusedBottomPath.lineTo(rotatedSize.width, rotatedSize.height);
+    unusedBottomPath.lineTo(rotatedSize.width, cropRect.bottom);
+    unusedBottomPath.close();
+
+    /// Path is first moving to the bottom,
+
+    canvas.drawPath(unusedTopPath, painter);
+    canvas.drawPath(unusedLeftPath, painter);
+    canvas.drawPath(unusedRightPath, painter);
+    canvas.drawPath(unusedBottomPath, painter);
   }
 
   @override

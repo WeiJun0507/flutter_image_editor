@@ -4,11 +4,9 @@ import 'package:image_editor/extension/general_binding.dart';
 import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/painter/crop_layer_painter.dart';
 
-///This binding can make editor to roatate canvas
-/// * for now, the paint-path,will change his relative position of canvas
-/// * when canvas rotated. because the paint-path area it's full canvas and
-/// * origin image is not maybe. if force to keep the relative path, will reduce
-/// * the paint-path area.
+/// Rotation and Flip features Binding class which holds rotate value and flip value
+/// The value will be used to effect on canvas when drawing the image and
+/// its relative drawing content.
 mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
   ///canvas rotate value
   /// * 90 angle each time.
@@ -17,6 +15,18 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
   ///canvas flip value
   /// * 180 angle each time.
   double flipValue = 0;
+
+  RotateDirection get getRotateDirection {
+    if (rotateValue == 0) {
+      return RotateDirection.top;
+    } else if (rotateValue == 1) {
+      return RotateDirection.left;
+    } else if (rotateValue == 2) {
+      return RotateDirection.bottom;
+    } else {
+      return RotateDirection.right;
+    }
+  }
 
   ///flip canvas
   void flipCanvas() {
@@ -34,7 +44,8 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
     rotateValue = (rotateValue + 1) % 4;
     PaintOperation value = PaintOperation(
       type: operationType.rotate,
-      data: RotateInfo(radians: rotateValue * math.pi / 2),
+      data: RotateInfo(
+          radians: rotateValue * math.pi / 2, direction: getRotateDirection),
     );
     realState?.operationHistory.add(value);
   }
@@ -43,7 +54,7 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
   void resetCanvasPlate() {
     PaintOperation value = PaintOperation(
       type: operationType.rotate,
-      data: RotateInfo(radians: 0),
+      data: RotateInfo(radians: 0, direction: getRotateDirection),
     );
     realState?.operationHistory.add(value);
   }
