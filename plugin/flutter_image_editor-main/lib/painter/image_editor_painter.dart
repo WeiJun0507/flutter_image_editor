@@ -352,37 +352,37 @@ class ImageEditorPainter extends CustomPainter {
     /// The path is first moving downward,
     /// then move to the size.width, back to y-axis 0, and close the path
     unusedTopPath.moveTo(0.0, 0.0);
-    unusedTopPath.lineTo(rotatedSize.width, 0.0);
-    unusedTopPath.lineTo(rotatedSize.width, cropRect.top);
+    unusedTopPath.lineTo(size.width, 0.0);
+    unusedTopPath.lineTo(size.width, cropRect.top);
     unusedTopPath.lineTo(0.0, cropRect.top);
     unusedTopPath.close();
 
     /// Draw left unused path
     /// Path is first moving to the right,
-    /// then move to the rotatedSize.height, back to x-axis 0, and close the path
+    /// then move to the size.height, back to x-axis 0, and close the path
     unusedLeftPath.moveTo(0.0, cropRect.top);
     unusedLeftPath.relativeLineTo(cropRect.left, 0.0);
     unusedLeftPath.relativeLineTo(0.0, cropRect.bottom - cropRect.top);
     unusedLeftPath.relativeLineTo(-cropRect.left, 0.0);
     unusedLeftPath.close();
 
-    /// moving canvas position to the right rotatedSize
-    unusedRightPath.moveTo(rotatedSize.width, cropRect.top);
+    /// moving canvas position to the right size
+    unusedRightPath.moveTo(size.width, cropRect.top);
 
     /// Draw right unused path
     /// Path is first moving to the right,
     /// then move to the canvas height, lastly move the canvas back to the right path
     /// close the path.
-    unusedRightPath.relativeLineTo(-(rotatedSize.width - cropRect.right), 0.0);
+    unusedRightPath.relativeLineTo(-(size.width - cropRect.right), 0.0);
     unusedRightPath.relativeLineTo(0.0, cropRect.bottom - cropRect.top);
-    unusedRightPath.relativeLineTo(rotatedSize.width - cropRect.right, 0.0);
+    unusedRightPath.relativeLineTo(size.width - cropRect.right, 0.0);
     unusedRightPath.close();
 
     /// Draw bottom unused path
     unusedBottomPath.moveTo(0.0, cropRect.bottom);
-    unusedBottomPath.lineTo(0.0, rotatedSize.height);
-    unusedBottomPath.lineTo(rotatedSize.width, rotatedSize.height);
-    unusedBottomPath.lineTo(rotatedSize.width, cropRect.bottom);
+    unusedBottomPath.lineTo(0.0, size.height);
+    unusedBottomPath.lineTo(size.width, size.height);
+    unusedBottomPath.lineTo(size.width, cropRect.bottom);
     unusedBottomPath.close();
 
     /// Path is first moving to the bottom,
