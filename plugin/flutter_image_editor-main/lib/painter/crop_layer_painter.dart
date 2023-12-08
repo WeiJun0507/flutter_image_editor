@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class CropLayerPainter extends CustomPainter {
@@ -15,6 +17,7 @@ class CropLayerPainter extends CustomPainter {
       ..color = Colors.white
       ..strokeWidth = 2.0;
     canvas.save();
+
     // 画 四个角
     canvas.translate(cropRect.topLeft.dx, cropRect.topLeft.dy);
     // 左上角

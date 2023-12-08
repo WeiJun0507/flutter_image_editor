@@ -38,7 +38,7 @@ class DrawingController extends ChangeNotifier {
 
   /// add point to point collection
   void addPoint(PaintOperation operation, Point point) {
-    if (operation.type != operationType.draw) return;
+    if (operation.type != OperationType.draw) return;
 
     final PointConfig config = operation.data as PointConfig;
     config.drawRecord.add(point);

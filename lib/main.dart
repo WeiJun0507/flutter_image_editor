@@ -2,10 +2,9 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_editor/flutter_image_editor.dart';
-import 'package:image_editor/model/editor_result.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -121,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   Navigator.of(context)
                       .push(
-                    MaterialPageRoute(
+                    CupertinoPageRoute(
                       builder: (BuildContext context) => ImageEditor(
                         uiImage: uiImage,
                         resizeUiImage: resizeUiImage,

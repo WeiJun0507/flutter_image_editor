@@ -5,6 +5,7 @@ import 'package:image_editor/extension/general_binding.dart';
 import 'package:image_editor/model/draw.dart';
 import 'package:image_editor/painter/drawing_pad_painter.dart';
 import 'package:image_editor/widget/drawing_board.dart';
+import 'package:image_editor/widget/editor_panel_controller.dart';
 
 ///drawing board
 mixin DrawingBinding<T extends StatefulWidget> on State<T> {
@@ -25,6 +26,8 @@ mixin DrawingBinding<T extends StatefulWidget> on State<T> {
 
     painterController.painterStyle =
         painterController.painterStyle.copyWith(drawStyle: style);
+    realState?.panelController.operateType.value =
+        style == DrawStyle.mosaic ? OperateType.mosaic : OperateType.brush;
   }
 
   ///change painter's color
@@ -61,7 +64,11 @@ mixin DrawingBinding<T extends StatefulWidget> on State<T> {
   /// The Drawing Component should only put Listener
   /// instead of the whole function drawing pad
   Widget buildDrawingComponent(Rect rect, List<PaintOperation> drawHistory) {
-    return DrawingBoard(controller: painterController, rect: rect, drawHistory: drawHistory,);
+    return DrawingBoard(
+      controller: painterController,
+      rect: rect,
+      drawHistory: drawHistory,
+    );
   }
 }
 
@@ -76,8 +83,8 @@ extension DrawingPath on CustomPainter {
   ) {
     for (int i = 0; i < point.drawRecord.length; i += 2) {
       final Offset center = point.drawRecord[i].offset;
-      Offset actualPos = center -
-          Offset(rect.left - oriRect.left, rect.top - oriRect.top);
+      Offset actualPos =
+          center - Offset(rect.left - oriRect.left, rect.top - oriRect.top);
       actualPos = Offset(
         clampDouble(actualPos.dx, 0, rect.right),
         clampDouble(actualPos.dy, 0, rect.bottom),

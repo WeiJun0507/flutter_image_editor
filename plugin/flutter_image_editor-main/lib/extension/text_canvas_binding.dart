@@ -9,18 +9,18 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
 
   void addText(FloatTextModel model) {
     PaintOperation value = PaintOperation(
-      type: operationType.text,
+      type: OperationType.text,
       data: model,
     );
-    realState?.operationHistory.add(value);
+    realState?.panelController.operationHistory.add(value);
     if (mounted) setState(() {});
   }
 
   ///delete a text from canvas
   void deleteTextWidget(FloatTextModel target) {
-    int index = realState?.operationHistory.indexWhere((element) => element.data == target) ?? -1;
+    int index = realState?.panelController.operationHistory.indexWhere((element) => element.data == target) ?? -1;
     if (index != -1) {
-      realState?.operationHistory.removeAt(index);
+      realState?.panelController.operationHistory.removeAt(index);
     }
 
     if (mounted) setState(() {});

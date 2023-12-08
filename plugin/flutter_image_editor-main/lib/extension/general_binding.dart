@@ -12,6 +12,16 @@ mixin WindowUiBinding<T extends StatefulWidget> on State<T> {
   double get screenWidth => windowSize.width;
 
   double get screenHeight => windowSize.height;
+
+  /// The Image position coordinate
+  double xGap = 0.0;
+  double yGap = 0.0;
+
+  /// The width of the image after operation.
+  double actualImageWidth = 0.0;
+
+  /// The height of the image after operation.
+  double actualImageHeight = 0.0;
 }
 
 extension BaseImageEditorState on State {

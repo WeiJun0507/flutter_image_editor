@@ -48,11 +48,6 @@ class ImageEditorPainter extends CustomPainter {
       ..filterQuality = FilterQuality.high
       ..isAntiAlias = true;
 
-    /// Flip Variable
-    double flipValue = 0;
-
-    /// Rotation Variable
-    double rotateRadians = 0;
     RotateDirection direction = RotateDirection.top;
 
     ui.Picture? limitPicture;
@@ -65,18 +60,7 @@ class ImageEditorPainter extends CustomPainter {
         for (int i = 0; i < drawHistory.length - 25; i++) {
           final history = drawHistory[i];
           switch (history.type) {
-            case operationType.rotate:
-
-              /// todo: canvas have to do rotation
-              rotateRadians = history.data.radians;
-              direction = history.data.direction;
-              break;
-            case operationType.flip:
-
-              /// todo: canvas have to do flip action
-              flipValue = history.data.flipRadians;
-              break;
-            case operationType.draw:
+            case OperationType.draw:
               final PointConfig points = history.data;
               paintDrawing(
                 layerCanvas,
@@ -86,7 +70,7 @@ class ImageEditorPainter extends CustomPainter {
                 isGeneratingResult,
               );
               break;
-            case operationType.text:
+            case OperationType.text:
               final FloatTextModel textItem = history.data;
               paintText(
                 layerCanvas,
@@ -98,7 +82,7 @@ class ImageEditorPainter extends CustomPainter {
                 false,
               );
               break;
-            case operationType.crop:
+            case OperationType.crop:
             default:
               break;
           }
@@ -112,18 +96,7 @@ class ImageEditorPainter extends CustomPainter {
 
       for (int i = 0; i < drawHistory.length; i++) {
         switch (drawHistory[i].type) {
-          case operationType.rotate:
-
-            /// todo: canvas have to do rotation
-            rotateRadians = drawHistory[i].data.radians;
-            direction = drawHistory[i].data.direction;
-            break;
-          case operationType.flip:
-
-            /// todo: canvas have to do rotation
-            flipValue = drawHistory[i].data.flipRadians;
-            break;
-          case operationType.draw:
+          case OperationType.draw:
             final PointConfig points = drawHistory[i].data;
             paintDrawing(
               layerCanvas,
@@ -133,7 +106,7 @@ class ImageEditorPainter extends CustomPainter {
               isGeneratingResult,
             );
             break;
-          case operationType.text:
+          case OperationType.text:
             final FloatTextModel textItem = drawHistory[i].data;
             paintText(
               layerCanvas,
@@ -145,7 +118,7 @@ class ImageEditorPainter extends CustomPainter {
               isGeneratingResult,
             );
             break;
-          case operationType.crop:
+          case OperationType.crop:
           default:
             break;
         }
@@ -153,6 +126,8 @@ class ImageEditorPainter extends CustomPainter {
 
       tempPicture = layerRecorder.endRecording();
     }
+
+    print("Check painter constraints: oR $originalRect | size: $size | cR: $cropRect");
 
     if (bigPicture == null) {
       final ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -163,7 +138,7 @@ class ImageEditorPainter extends CustomPainter {
           canvas: backgroundCanvas,
           rect: originalRect,
           image: image,
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
         );
       } else {
         backgroundCanvas.drawImageRect(
@@ -181,12 +156,6 @@ class ImageEditorPainter extends CustomPainter {
       bigPicture = recorder.endRecording();
     }
 
-    /// Rotate and Flip the drawing canvas
-    canvas.translate(size.width / 2, size.height / 2);
-    canvas.rotate(rotateRadians);
-    canvas.transform(Matrix4.rotationY(flipValue).storage);
-    canvas.translate(-(size.width / 2), -(size.height / 2));
-
     /// Step 2: always paint the bigPicture
     if (bigPicture != null) {
       canvas.drawPicture(bigPicture!);
@@ -196,12 +165,6 @@ class ImageEditorPainter extends CustomPainter {
     if (tempPicture != null) {
       canvas.drawPicture(tempPicture!);
     }
-
-    /// Reset rotate and translate
-    canvas.translate(size.width / 2, size.height / 2);
-    canvas.rotate(-rotateRadians);
-    canvas.transform(Matrix4.rotationY(-flipValue).storage);
-    canvas.translate(-(size.width / 2), -(size.height / 2));
 
     drawUnwantedPath(canvas, size, cropRect, imgCoverPaint, direction);
 

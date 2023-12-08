@@ -33,31 +33,39 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
   void flipCanvas() {
     flipValue = flipValue == 0 ? math.pi : 0;
     PaintOperation value = PaintOperation(
-      type: operationType.flip,
+      type: OperationType.flip,
       data: FlipInfo(flipRadians: flipValue),
     );
-    realState?.operationHistory.add(value);
+    realState?.panelController.operationHistory.add(value);
   }
 
-  ///routate canvas
+  void undoFlipCanvas() {
+    flipValue = flipValue == 0 ? math.pi : 0;
+  }
+
+  /// Rotate canvas
   /// * will effect image, text, drawing board
   void rotateCanvasPlate() {
     rotateValue = (rotateValue + 1) % 4;
     PaintOperation value = PaintOperation(
-      type: operationType.rotate,
+      type: OperationType.rotate,
       data: RotateInfo(
           radians: rotateValue * math.pi / 2, direction: getRotateDirection),
     );
-    realState?.operationHistory.add(value);
+    realState?.panelController.operationHistory.add(value);
+  }
+
+  void undoRotateCanvas() {
+    rotateValue = (rotateValue - 1) % 4;
   }
 
   ///reset canvas
   void resetCanvasPlate() {
     PaintOperation value = PaintOperation(
-      type: operationType.rotate,
+      type: OperationType.rotate,
       data: RotateInfo(radians: 0, direction: getRotateDirection),
     );
-    realState?.operationHistory.add(value);
+    realState?.panelController.operationHistory.add(value);
   }
 }
 

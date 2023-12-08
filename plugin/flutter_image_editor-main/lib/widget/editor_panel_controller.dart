@@ -1,9 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_editor/extension/matrix_changes_binding.dart';
 import 'package:image_editor/model/draw.dart';
 
-///The object taht are moving.
+///The object That are moving.
 enum MoveStuff {
   non,
   text,
@@ -21,6 +22,10 @@ enum OperateType {
 
 class EditorPanelController {
   static const defaultTrashColor = const Color(0x26ffffff);
+
+  /// operation history
+  /// Record down all the operations that have been performed
+  final List<PaintOperation> operationHistory = List.empty(growable: true);
 
   EditorPanelController() {
     colorSelected = ValueNotifier(brushColor.first.value);
@@ -177,4 +182,6 @@ class EditorPanelController {
         tcSize.height);
     return textR.overlaps(tcR);
   }
+
+
 }

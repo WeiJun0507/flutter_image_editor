@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -99,18 +100,48 @@ class ImageEditorState extends State<ImageEditor>
   ///Operation panel button's horizontal space.
   Widget get controlBtnSpacing => 5.hGap;
 
-  /// Image original aspect ratio
-  /// May be use later to generate the image when clip
-  double get imgOriginalRatio => widget.height / widget.width;
-
-  /// operation history
-  /// Record down all the operations that have been performed
-  final List<PaintOperation> operationHistory = List.empty(growable: true);
-
-  List<FloatTextModel> get textModels => operationHistory
-      .where((element) => element.type == operationType.text)
+  List<FloatTextModel> get textModels => panelController.operationHistory
+      .where((element) => element.type == OperationType.text)
       .map<FloatTextModel>((e) => e.data as FloatTextModel)
       .toList();
+
+  @override
+  void initState() {
+    super.initState();
+    initPainter(
+      _defaultLauncher.pColor,
+      _defaultLauncher.mosaicWidth,
+      _defaultLauncher.pStrockWidth,
+    );
+  }
+
+  calculateImageSize() {
+    actualImageHeight = getRotateDirection == RotateDirection.left ||
+        getRotateDirection == RotateDirection.right
+        ? widget.width
+        : widget.height;
+
+    actualImageWidth = getRotateDirection == RotateDirection.left ||
+        getRotateDirection == RotateDirection.right
+        ? widget.height
+        : widget.width;
+
+    if (actualImageWidth > screenWidth) {
+      final tempWidth = actualImageWidth;
+      actualImageWidth = screenWidth;
+      actualImageHeight = actualImageHeight * (actualImageWidth / tempWidth);
+    };
+    if (actualImageHeight > screenHeight) {
+      final tempHeight= actualImageHeight;
+      actualImageHeight = screenHeight;
+      actualImageWidth = actualImageWidth * (actualImageHeight / tempHeight);
+    };
+
+    xGap = ((screenWidth - actualImageWidth) / 2);
+
+    yGap = ((screenHeight - actualImageHeight) / 2) - kToolbarHeight;
+    if (yGap < 0) yGap = 0;
+  }
 
   ///Save the edited-image to [widget.savePath] or [getTemporaryDirectory()].
   void saveImage() async {
@@ -128,7 +159,7 @@ class ImageEditorState extends State<ImageEditor>
         ),
         image: widget.uiImage,
         resizeImage: widget.resizeUiImage,
-        drawHistory: operationHistory,
+        drawHistory: panelController.operationHistory,
         isGeneratingResult: true,
       );
       ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -171,23 +202,21 @@ class ImageEditorState extends State<ImageEditor>
     }
   }
 
-  static ImageEditorState? of(BuildContext context) {
-    return context.findAncestorStateOfType<ImageEditorState>();
-  }
+  /// Utility Tools
+  void undoOperation() {
+    PaintOperation operation = panelController.operationHistory.removeLast();
+    switch (operation.type) {
+      case OperationType.rotate:
+        undoRotateCanvas();
+        break;
+      case OperationType.flip:
+        undoFlipCanvas();
+        break;
+      default:
+        break;
+    }
 
-  @override
-  void initState() {
-    super.initState();
-    initPainter(
-      _defaultLauncher.pColor,
-      _defaultLauncher.mosaicWidth,
-      _defaultLauncher.pStrockWidth,
-    );
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      initClipper(widget.width, widget.height, headerHeight);
-      print("check img edit size: ${widget.width} | ${widget.height}");
-      if (mounted) setState(() {});
-    });
+    if (mounted) setState(() {});
   }
 
   @override
@@ -198,10 +227,15 @@ class ImageEditorState extends State<ImageEditor>
         (panelController.screenSize!.width - panelController.tcSize.width) / 2,
         panelController.trashCanPosition.dy);
 
-    double positionTop = ((screenHeight - widget.height) / 2) - kToolbarHeight;
-    double positionLeft = ((screenWidth - widget.width) / 2);
+    // Initialize window size
+    calculateImageSize();
+    // Initialize clipper size
+    initClipper(actualImageWidth, actualImageHeight, headerHeight);
+
+    print("Build constraints: xGap: ${xGap}, yGap: ${yGap}, actualImageWidth: ${actualImageWidth}, actualImageHeight: ${actualImageHeight}");
 
     return SafeArea(
+      top: false,
       child: Material(
         color: Colors.black,
         child: Listener(
@@ -240,70 +274,76 @@ class ImageEditorState extends State<ImageEditor>
               //canvas
               Positioned.fromRect(
                 rect: Rect.fromLTWH(
-                  positionLeft,
-                  positionTop,
-                  widget.width,
-                  widget.height,
+                  xGap,
+                  yGap,
+                  actualImageWidth,
+                  actualImageHeight
                 ),
-                child: InteractiveViewer(
-                  minScale: 1.0,
-                  maxScale: 5.0,
-                  child: Stack(
-                    children: <Widget>[
-                      Positioned.fill(
-                        child: RepaintBoundary(
-                          key: _boundaryKey,
-                          child: CustomPaint(
-                            painter: ImageEditorPainter(
-                              panelController: panelController,
-                              originalRect: Rect.fromLTWH(
-                                0,
-                                0,
-                                widget.width,
-                                widget.height,
-                              ),
-                              cropRect: Rect.fromLTRB(
-                                topLeft.dx,
-                                topLeft.dy,
-                                bottomRight.dx,
-                                bottomRight.dy,
-                              ),
-                              image: widget.uiImage,
-                              resizeImage: widget.resizeUiImage,
-                              drawHistory: operationHistory,
-                              isGeneratingResult: false,
-                            ),
-                            child: Stack(
-                              children: <Widget>[
-                                for (final model in textModels)
-                                  buildTextComponent(model),
-                                if (panelController.operateType.value ==
-                                        OperateType.brush ||
-                                    panelController.operateType.value ==
-                                        OperateType.mosaic)
-                                  Positioned.fill(
-                                    child: buildDrawingComponent(
-                                      Rect.fromLTRB(
-                                        topLeft.dx,
-                                        topLeft.dy,
-                                        bottomRight.dx,
-                                        bottomRight.dy,
-                                      ),
-                                      operationHistory,
-                                    ),
+                child: Transform.flip(
+                  flipX: flipValue == 0 ? false : true,
+                  child: Transform.rotate(
+                    angle: rotateValue * pi / 2,
+                    child: InteractiveViewer(
+                      minScale: 1.0,
+                      maxScale: 5.0,
+                      child: Stack(
+                        children: <Widget>[
+                          Positioned.fill(
+                            child: RepaintBoundary(
+                              key: _boundaryKey,
+                              child: CustomPaint(
+                                painter: ImageEditorPainter(
+                                  panelController: panelController,
+                                  originalRect: Rect.fromLTWH(
+                                    0,
+                                    0,
+                                    actualImageWidth,
+                                    actualImageHeight,
                                   ),
-                                if (panelController.operateType.value ==
-                                    OperateType.clip)
-                                  buildClipCover(context),
-                              ],
+                                  cropRect: Rect.fromLTRB(
+                                    topLeft.dx,
+                                    topLeft.dy,
+                                    bottomRight.dx,
+                                    bottomRight.dy,
+                                  ),
+                                  image: widget.uiImage,
+                                  resizeImage: widget.resizeUiImage,
+                                  drawHistory: panelController.operationHistory,
+                                  isGeneratingResult: false,
+                                ),
+                                child: Stack(
+                                  children: <Widget>[
+                                    if (panelController.operateType.value ==
+                                        OperateType.clip)
+                                      buildClipCover(context),
+                                    for (final model in textModels)
+                                      buildTextComponent(model),
+                                    if (panelController.operateType.value ==
+                                            OperateType.brush ||
+                                        panelController.operateType.value ==
+                                            OperateType.mosaic)
+                                      Positioned.fill(
+                                        child: buildDrawingComponent(
+                                          Rect.fromLTRB(
+                                            topLeft.dx,
+                                            topLeft.dy,
+                                            bottomRight.dx,
+                                            bottomRight.dy,
+                                          ),
+                                          panelController.operationHistory,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
 
-                      // if (panelController.operateType.value == OperateType.non)
-                      //   buildScaleCover(context),
-                    ],
+                          // if (panelController.operateType.value == OperateType.non)
+                          //   buildScaleCover(context),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -375,10 +415,7 @@ class ImageEditorState extends State<ImageEditor>
                           .toList(),
                     35.hGap,
                     unDoWidget(
-                      onPressed: () {
-                        operationHistory.removeLast();
-                        if (mounted) setState(() {});
-                      },
+                      onPressed: undoOperation,
                     ),
                     if (value == OperateType.mosaic) 7.hGap,
                   ],
@@ -412,15 +449,15 @@ class ImageEditorState extends State<ImageEditor>
                         if (mounted) setState(() {});
                       }),
                       controlBtnSpacing,
-                      // _buildButton(
-                      //   OperateType.rotated,
-                      //   'Rotate',
-                      //   onPressed: () {
-                      //     rotateCanvasPlate();
-                      //     if (mounted) setState(() {});
-                      //   },
-                      // ),
-                      // controlBtnSpacing,
+                      _buildButton(
+                        OperateType.rotated,
+                        'Rotate',
+                        onPressed: () {
+                          rotateCanvasPlate();
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                      controlBtnSpacing,
                       _buildButton(
                         OperateType.clip,
                         'Clip',

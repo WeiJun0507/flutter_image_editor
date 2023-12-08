@@ -15,10 +15,10 @@ enum PointType {
   move,
 }
 
-enum operationType { draw, text, crop, flip, rotate }
+enum OperationType { draw, text, crop, flip, rotate }
 
 class PaintOperation {
-  final operationType type;
+  final OperationType type;
   final dynamic data;
 
   PaintOperation({required this.type, required this.data});
@@ -48,7 +48,7 @@ class PainterStyle {
     color = Colors.red,
     mosaicWidth = 5.0,
     strokeWidth = 3.0,
-    drawStyle = DrawStyle.normal,
+    drawStyle = DrawStyle.non,
   })  : this.color = color,
         this.mosaicWidth = mosaicWidth,
         this.strokeWidth = strokeWidth,

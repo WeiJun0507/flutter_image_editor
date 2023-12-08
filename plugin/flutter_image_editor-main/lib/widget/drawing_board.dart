@@ -34,7 +34,7 @@ class _DrawingBoardState extends State<DrawingBoard> {
         (o.dy > widget.rect.top && o.dy < widget.rect.bottom)) {
       if (event is PointerDownEvent) {
         PaintOperation value = PaintOperation(
-          type: operationType.draw,
+          type: OperationType.draw,
           data: PointConfig(
             drawRecord: [],
             painterStyle: widget.controller.painterStyle,
@@ -53,7 +53,7 @@ class _DrawingBoardState extends State<DrawingBoard> {
         _isOutsideDrawField = false;
 
         PaintOperation value = PaintOperation(
-          type: operationType.draw,
+          type: OperationType.draw,
           data: PointConfig(
             drawRecord: [],
             painterStyle: widget.controller.painterStyle,
