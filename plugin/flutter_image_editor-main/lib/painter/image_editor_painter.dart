@@ -17,6 +17,8 @@ class ImageEditorPainter extends CustomPainter {
 
   final bool isGeneratingResult;
 
+  final double resizeRatio;
+
   ImageEditorPainter({
     required this.panelController,
     required this.originalRect,
@@ -25,6 +27,7 @@ class ImageEditorPainter extends CustomPainter {
     required this.resizeImage,
     required this.drawHistory,
     required this.isGeneratingResult,
+    required this.resizeRatio,
   });
 
   /// Temp Picture is used to get the paint layer of [text, draw, crop] operation
@@ -127,8 +130,6 @@ class ImageEditorPainter extends CustomPainter {
       tempPicture = layerRecorder.endRecording();
     }
 
-    print("Check painter constraints: oR $originalRect | size: $size | cR: $cropRect");
-
     if (bigPicture == null) {
       final ui.PictureRecorder recorder = ui.PictureRecorder();
       final backgroundCanvas = Canvas(recorder);
@@ -141,9 +142,16 @@ class ImageEditorPainter extends CustomPainter {
           fit: BoxFit.cover,
         );
       } else {
+        final actualRect = Rect.fromLTWH(
+          cropRect.left * resizeRatio,
+          cropRect.top * resizeRatio,
+          cropRect.width * resizeRatio,
+          cropRect.height * resizeRatio,
+        );
+
         backgroundCanvas.drawImageRect(
-          resizeImage,
-          cropRect,
+          image,
+          actualRect,
           Rect.fromLTWH(0.0, 0.0, size.width, size.height),
           croppedImgPaint,
         );
@@ -166,7 +174,9 @@ class ImageEditorPainter extends CustomPainter {
       canvas.drawPicture(tempPicture!);
     }
 
-    drawUnwantedPath(canvas, size, cropRect, imgCoverPaint, direction);
+    if (!isGeneratingResult) {
+      drawUnwantedPath(canvas, size, cropRect, imgCoverPaint, direction);
+    }
 
     // canvas.save();
     //

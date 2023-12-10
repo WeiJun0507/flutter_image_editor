@@ -91,6 +91,8 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
     bottomRight = Offset(width, height);
 
     this.headerHeight = headerHeight;
+
+    if (mounted) setState(() {});
   }
 
   bool exceedWidthBoundaries(Offset a, Offset b) {
@@ -130,7 +132,7 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
     if (corner == Corner.bottomLeft) onBottomLeftChange(finalGlobalPos);
     if (corner == Corner.bottomRight) onBottomRightChange(finalGlobalPos);
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   /// top need to minus top header height for details

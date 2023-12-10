@@ -22,6 +22,9 @@ mixin WindowUiBinding<T extends StatefulWidget> on State<T> {
 
   /// The height of the image after operation.
   double actualImageHeight = 0.0;
+
+  /// The resize ratio of the original image to the actual display on screen image.
+  double resizeRatio = 0.0;
 }
 
 extension BaseImageEditorState on State {

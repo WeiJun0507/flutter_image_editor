@@ -113,16 +113,21 @@ class ImageEditorState extends State<ImageEditor>
       _defaultLauncher.mosaicWidth,
       _defaultLauncher.pStrockWidth,
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      // Initialize clipper size
+      initClipper(actualImageWidth, actualImageHeight, headerHeight);
+    });
   }
 
   calculateImageSize() {
     actualImageHeight = getRotateDirection == RotateDirection.left ||
-        getRotateDirection == RotateDirection.right
+            getRotateDirection == RotateDirection.right
         ? widget.width
         : widget.height;
 
     actualImageWidth = getRotateDirection == RotateDirection.left ||
-        getRotateDirection == RotateDirection.right
+            getRotateDirection == RotateDirection.right
         ? widget.height
         : widget.width;
 
@@ -130,17 +135,27 @@ class ImageEditorState extends State<ImageEditor>
       final tempWidth = actualImageWidth;
       actualImageWidth = screenWidth;
       actualImageHeight = actualImageHeight * (actualImageWidth / tempWidth);
-    };
+    }
+
     if (actualImageHeight > screenHeight) {
-      final tempHeight= actualImageHeight;
+      final tempHeight = actualImageHeight;
       actualImageHeight = screenHeight;
       actualImageWidth = actualImageWidth * (actualImageHeight / tempHeight);
-    };
+    }
 
     xGap = ((screenWidth - actualImageWidth) / 2);
 
     yGap = ((screenHeight - actualImageHeight) / 2) - kToolbarHeight;
     if (yGap < 0) yGap = 0;
+
+    calculateResizeRatio();
+  }
+
+  void calculateResizeRatio() {
+    final widthRatio = widget.uiImage.width / actualImageWidth;
+    final heightRatio = widget.uiImage.height / actualImageHeight;
+
+    resizeRatio = max(widthRatio, heightRatio);
   }
 
   ///Save the edited-image to [widget.savePath] or [getTemporaryDirectory()].
@@ -161,6 +176,7 @@ class ImageEditorState extends State<ImageEditor>
         resizeImage: widget.resizeUiImage,
         drawHistory: panelController.operationHistory,
         isGeneratingResult: true,
+        resizeRatio: resizeRatio,
       );
       ui.PictureRecorder recorder = ui.PictureRecorder();
       Canvas canvas = Canvas(recorder);
@@ -204,6 +220,7 @@ class ImageEditorState extends State<ImageEditor>
 
   /// Utility Tools
   void undoOperation() {
+    if (panelController.operationHistory.isEmpty) return;
     PaintOperation operation = panelController.operationHistory.removeLast();
     switch (operation.type) {
       case OperationType.rotate:
@@ -229,10 +246,6 @@ class ImageEditorState extends State<ImageEditor>
 
     // Initialize window size
     calculateImageSize();
-    // Initialize clipper size
-    initClipper(actualImageWidth, actualImageHeight, headerHeight);
-
-    print("Build constraints: xGap: ${xGap}, yGap: ${yGap}, actualImageWidth: ${actualImageWidth}, actualImageHeight: ${actualImageHeight}");
 
     return SafeArea(
       top: false,
@@ -277,7 +290,7 @@ class ImageEditorState extends State<ImageEditor>
                   xGap,
                   yGap,
                   actualImageWidth,
-                  actualImageHeight
+                  actualImageHeight,
                 ),
                 child: Transform.flip(
                   flipX: flipValue == 0 ? false : true,
@@ -310,6 +323,7 @@ class ImageEditorState extends State<ImageEditor>
                                   resizeImage: widget.resizeUiImage,
                                   drawHistory: panelController.operationHistory,
                                   isGeneratingResult: false,
+                                  resizeRatio: resizeRatio,
                                 ),
                                 child: Stack(
                                   children: <Widget>[
