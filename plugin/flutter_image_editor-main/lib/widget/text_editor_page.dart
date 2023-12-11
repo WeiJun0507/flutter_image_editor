@@ -70,8 +70,24 @@ class TextEditorPageState extends State<TextEditorPage>
   }
 
   void popWithResult() {
+    if (widget.model != null) {
+      widget.model!.text = _controller.text;
+      widget.model!.style = TextStyle(
+        fontSize: _size,
+        color: _textColor,
+        fontWeight: _fontWeight,
+      );
+
+      Navigator.pop(context, {
+        'isEdit': true,
+        'result': widget.model,
+      });
+
+      return;
+    }
+
     Navigator.pop(context, {
-      'isEdit': widget.model != null ? true : false,
+      'isEdit': false,
       'result': buildModel(),
     });
   }

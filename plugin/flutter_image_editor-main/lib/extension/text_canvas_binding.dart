@@ -39,6 +39,7 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
             }))
         .then((value) {
       realState?.panelController.showPanel();
+      realState?.panelController.cancelOperateType();
       if (value is Map) {
         if (value['isEdit']) {
           model = value['result'];
@@ -50,7 +51,9 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
     });
   }
 
-  buildTextComponent(FloatTextModel model) {
+  Widget buildTextComponent(dynamic model) {
+    if (model is! FloatTextModel) return const SizedBox();
+
     return Positioned(
       left: model.left,
       top: model.top,
@@ -58,13 +61,12 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
         width: model.size?.width,
         height: model.size?.height,
         child: GestureDetector(
-          onTap: () {},
+          onTap: () => toTextEditorPage(model: model),
           onPanStart: (_) {
             realState?.panelController.moveText(model);
           },
           onPanUpdate: (details) {
-            final textModel =
-                realState?.panelController.movingTarget as FloatTextModel?;
+            final textModel = realState?.panelController.movingTarget;
             if (textModel != null) {
               textModel.isSelected = true;
               textModel.left += details.delta.dx;

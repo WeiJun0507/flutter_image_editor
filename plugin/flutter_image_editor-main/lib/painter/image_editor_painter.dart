@@ -11,23 +11,22 @@ class ImageEditorPainter extends CustomPainter {
   final Rect originalRect;
   final Rect cropRect;
   final ui.Image image;
-  final ui.Image resizeImage;
+  final double resizeRatio;
 
   final List<PaintOperation> drawHistory;
 
   final bool isGeneratingResult;
-
-  final double resizeRatio;
+  final double flipRadians;
 
   ImageEditorPainter({
     required this.panelController,
     required this.originalRect,
     required this.cropRect,
     required this.image,
-    required this.resizeImage,
+    required this.resizeRatio,
     required this.drawHistory,
     required this.isGeneratingResult,
-    required this.resizeRatio,
+    required this.flipRadians,
   });
 
   /// Temp Picture is used to get the paint layer of [text, draw, crop] operation
@@ -142,6 +141,12 @@ class ImageEditorPainter extends CustomPainter {
           fit: BoxFit.cover,
         );
       } else {
+        canvas.translate(size.width / 2, size.height /2);
+        // canvas.rotate(radians);
+
+        canvas.transform(Matrix4.rotationY(flipRadians).storage);
+        canvas.translate(-(size.width / 2), -(size.height /2));
+
         final actualRect = Rect.fromLTWH(
           cropRect.left * resizeRatio,
           cropRect.top * resizeRatio,
@@ -178,40 +183,7 @@ class ImageEditorPainter extends CustomPainter {
       drawUnwantedPath(canvas, size, cropRect, imgCoverPaint, direction);
     }
 
-    // canvas.save();
-    //
-    // canvas.translate(size.width / 2, size.height /2);
-    // canvas.rotate(radians);
-    // canvas.transform(Matrix4.rotationY(flipRadians).storage);
-    // canvas.translate(-(size.width / 2), -(size.height /2));
-    //
-    // if (!isGeneratingResult) {
-    //   canvas.drawImage(image, Offset.zero, imgCoverPaint);
-    //   canvas.drawImageRect(image, cropRect, cropRect, croppedImgPaint);
-    //   paintText(
-    //     canvas,
-    //     size,
-    //     Offset.zero,
-    //     textItems,
-    //     false,
-    //   );
-    //
-    // } else {
-    //   canvas.drawImageRect(
-    //     image,
-    //     cropRect,
-    //     Rect.fromLTWH(0.0, 0.0, size.width, size.height),
-    //     croppedImgPaint,
-    //   );
-    //   paintText(
-    //     canvas,
-    //     originalRect.size,
-    //     Offset(cropRect.left, cropRect.top),
-    //     textItems,
-    //     isGeneratingResult,
-    //   );
-    // }
-    // canvas.restore();
+    if (isGeneratingResult) canvas.restore();
   }
 
   void paintText(

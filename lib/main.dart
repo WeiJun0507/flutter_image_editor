@@ -71,10 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  final bytes =
-                      await getImageBytes('assets/images/tg-screenshot.jpg');
                   ui.Image uiImage = await getUiImageWithoutSize(
-                      'assets/images/tg-screenshot.jpg');
+                      'assets/images/wide-img.webp');
                   double canvasHeight = 0.0;
                   double canvasWidth = 0.0;
                   final screenHeight = MediaQuery.of(context).size.height;
@@ -82,9 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   final viewPadding = View.of(context).viewPadding;
 
                   final maxHeight = screenHeight -
-                      viewPadding.top -
-                      viewPadding.bottom -
-                      (kToolbarHeight * 3);
+                      viewPadding.top - kToolbarHeight;
 
                   if (uiImage.height > uiImage.width) {
                     canvasHeight = maxHeight;
@@ -112,18 +108,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   }
 
-                  final resizeUiImage = await getUiImageWithSize(
-                    bytes,
-                    canvasHeight,
-                    canvasWidth,
-                  );
-
                   Navigator.of(context)
                       .push(
                     CupertinoPageRoute(
                       builder: (BuildContext context) => ImageEditor(
                         uiImage: uiImage,
-                        resizeUiImage: resizeUiImage,
                         width: canvasWidth,
                         height: canvasHeight,
                       ),

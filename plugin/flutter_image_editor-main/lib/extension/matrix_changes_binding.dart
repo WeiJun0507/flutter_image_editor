@@ -80,17 +80,13 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
   Offset bottomLeft = Offset.zero;
   Offset bottomRight = Offset.zero;
 
-  double headerHeight = 0.0;
-
-  void initClipper(double width, double height, double headerHeight) {
+  void initClipper(double width, double height) {
     oriWidth = width;
     oriHeight = height;
 
     topRight = Offset(width, 0.0);
     bottomLeft = Offset(0.0, height);
     bottomRight = Offset(width, height);
-
-    this.headerHeight = headerHeight;
 
     if (mounted) setState(() {});
   }
@@ -126,7 +122,7 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
 
   onCornerChange(DragUpdateDetails details, Corner corner) {
     final globalPos = details.globalPosition;
-    final finalGlobalPos = globalPos - Offset(0.0, headerHeight);
+    final finalGlobalPos = globalPos - Offset(realState.xGap ?? 0.0, realState?.yGap ?? 0.0);
     if (corner == Corner.topLeft) onTopLeftChange(finalGlobalPos);
     if (corner == Corner.topRight) onTopRightChange(finalGlobalPos);
     if (corner == Corner.bottomLeft) onBottomLeftChange(finalGlobalPos);
@@ -158,6 +154,8 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
       topRight = Offset(topRight.dx, globalPos.dy);
       topLeft = Offset(topLeft.dx, globalPos.dy);
     }
+
+    print("on top right change after: ${topRight} | ${topLeft}");
   }
 
   /// bottom need to minus bottom control header height + tool bar heights for details
