@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: ElevatedButton(
                 onPressed: () async {
                   ui.Image uiImage = await getUiImageWithoutSize(
-                      'assets/images/wide-img.webp');
+                      'assets/images/long-img.jpg');
                   double canvasHeight = 0.0;
                   double canvasWidth = 0.0;
                   final screenHeight = MediaQuery.of(context).size.height;
