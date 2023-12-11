@@ -1,9 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:image_editor/extension/drawing_canvas_binding.dart';
-import 'package:image_editor/model/draw.dart';
-import 'package:image_editor/widget/editor_panel_controller.dart';
+import '../flutter_image_editor.dart';
 
 class ImageEditorPainter extends CustomPainter {
   EditorPanelController panelController;

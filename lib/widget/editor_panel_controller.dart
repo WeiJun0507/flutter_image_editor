@@ -1,9 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:image_editor/extension/matrix_changes_binding.dart';
-import 'package:image_editor/model/draw.dart';
-
+import '../flutter_image_editor.dart';
 ///The object That are moving.
 enum MoveStuff {
   non,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:image_editor/model/draw.dart';
-import 'package:image_editor/painter/drawing_pad_painter.dart';
+import '../flutter_image_editor.dart';
+
 
 class DrawingBoard extends StatefulWidget {
   final DrawingController controller;

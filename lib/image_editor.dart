@@ -5,21 +5,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
-import 'package:image_editor/extension/general_binding.dart';
-import 'package:image_editor/model/draw.dart';
-import 'package:image_editor/model/editor_result.dart';
-import 'package:image_editor/painter/image_editor_painter.dart';
-import 'package:image_editor/widget/color_picker.dart';
 import 'dart:ui' as ui;
 
-import 'extension/drawing_canvas_binding.dart';
-import 'extension/matrix_changes_binding.dart';
-import 'extension/num_extension.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'extension/text_canvas_binding.dart';
-import 'widget/editor_panel_controller.dart';
-import 'widget/image_editor_delegate.dart';
+import '../flutter_image_editor.dart';
 
 const CanvasLauncher _defaultLauncher =
     CanvasLauncher(mosaicWidth: 5.0, pStrockWidth: 5.0, pColor: Colors.red);

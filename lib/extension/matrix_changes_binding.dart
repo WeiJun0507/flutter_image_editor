@@ -1,9 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:image_editor/extension/general_binding.dart';
-import 'package:image_editor/model/draw.dart';
-import 'package:image_editor/painter/crop_layer_painter.dart';
-import 'package:image_editor/widget/editor_panel_controller.dart';
+import '../flutter_image_editor.dart';
 
 /// Rotation and Flip features Binding class which holds rotate value and flip value
 /// The value will be used to effect on canvas when drawing the image and
@@ -154,8 +151,6 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
       topRight = Offset(topRight.dx, globalPos.dy);
       topLeft = Offset(topLeft.dx, globalPos.dy);
     }
-
-    print("on top right change after: ${topRight} | ${topLeft}");
   }
 
   /// bottom need to minus bottom control header height + tool bar heights for details

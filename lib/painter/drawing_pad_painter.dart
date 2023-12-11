@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:image_editor/model/draw.dart';
-
-
+import '../flutter_image_editor.dart';
 
 /// class for interaction with signature widget
 /// manages points representing signature on canvas

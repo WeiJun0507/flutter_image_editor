@@ -1,9 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:image_editor/model/draw.dart';
-
-import '../image_editor.dart';
+import '../flutter_image_editor.dart';
 
 class FloatTextWidget extends StatefulWidget {
   final FloatTextModel textModel;

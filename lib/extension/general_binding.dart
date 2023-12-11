@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:image_editor/image_editor.dart';
+import '../flutter_image_editor.dart';
 
 ///information about window
 mixin WindowUiBinding<T extends StatefulWidget> on State<T> {

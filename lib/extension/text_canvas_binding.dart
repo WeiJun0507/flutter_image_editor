@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:image_editor/extension/general_binding.dart';
-import 'package:image_editor/model/draw.dart';
-import 'package:image_editor/widget/text_editor_page.dart';
+import '../flutter_image_editor.dart';
 
 ///text painting
 mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
@@ -18,7 +16,9 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
 
   ///delete a text from canvas
   void deleteTextWidget(FloatTextModel target) {
-    int index = realState?.panelController.operationHistory.indexWhere((element) => element.data == target) ?? -1;
+    int index = realState?.panelController.operationHistory
+            .indexWhere((element) => element.data == target) ??
+        -1;
     if (index != -1) {
       realState?.panelController.operationHistory.removeAt(index);
     }
