@@ -439,15 +439,15 @@ class ImageEditorState extends State<ImageEditor>
                         if (mounted) setState(() {});
                       }),
                       controlBtnSpacing,
-                      _buildButton(
-                        OperateType.rotated,
-                        'Rotate',
-                        onPressed: () {
-                          rotateCanvasPlate();
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                      controlBtnSpacing,
+                      // _buildButton(
+                      //   OperateType.rotated,
+                      //   'Rotate',
+                      //   onPressed: () {
+                      //     rotateCanvasPlate();
+                      //     if (mounted) setState(() {});
+                      //   },
+                      // ),
+                      // controlBtnSpacing,
                       _buildButton(
                         OperateType.clip,
                         'Clip',
