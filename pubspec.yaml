@@ -3,7 +3,7 @@ description: An image editor with crop, scribble, mosaic, add-text, flip, rotate
 version: 0.0.1
 
 environment:
-  sdk: '>=2.18.0 <4.0.0'
+  sdk: '>=3.0.5 <4.0.0'
   flutter: ">=3.7.0"
 
 dependencies:

@@ -361,11 +361,12 @@ class ImageEditorState extends State<ImageEditor>
                   valueListenable: panelController.showTrashCan,
                   builder: (ctx, value, child) {
                     return AnimatedPositioned(
-                        bottom:
-                            value ? panelController.trashCanPosition.dy : -100,
-                        left: panelController.trashCanPosition.dx,
-                        child: _buildTrashCan(),
-                        duration: panelController.panelDuration);
+                      bottom:
+                          value ? panelController.trashCanPosition.dy : -100,
+                      left: panelController.trashCanPosition.dx,
+                      child: _buildTrashCan(),
+                      duration: panelController.panelDuration,
+                    );
                   }),
             ],
           ),
@@ -439,15 +440,15 @@ class ImageEditorState extends State<ImageEditor>
                         if (mounted) setState(() {});
                       }),
                       controlBtnSpacing,
-                      // _buildButton(
-                      //   OperateType.rotated,
-                      //   'Rotate',
-                      //   onPressed: () {
-                      //     rotateCanvasPlate();
-                      //     if (mounted) setState(() {});
-                      //   },
-                      // ),
-                      // controlBtnSpacing,
+                      _buildButton(
+                        OperateType.rotated,
+                        'Rotate',
+                        onPressed: () {
+                          rotateCanvasPlate();
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                      controlBtnSpacing,
                       _buildButton(
                         OperateType.clip,
                         'Clip',

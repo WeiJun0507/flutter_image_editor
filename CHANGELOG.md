@@ -1,11 +1,12 @@
-## 0.0.3
+## 1.0.0+2
 
-feat : add interact for image and allow cancel operation
+- Fix Crop corner change doesn't work with Flip enabled.
 
-## 0.0.2
+## 1.0.0+1
 
-fix: bugs
+- Added Flip and Crop Function
+- Restructure Code
 
-## 0.0.1
+## 1.0.0
 
 * TODO: Describe initial release.

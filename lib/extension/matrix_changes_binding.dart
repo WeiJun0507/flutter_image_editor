@@ -119,7 +119,20 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
 
   onCornerChange(DragUpdateDetails details, Corner corner) {
     final globalPos = details.globalPosition;
-    final finalGlobalPos = globalPos - Offset(realState?.xGap ?? 0.0, realState?.yGap ?? 0.0);
+    final finalGlobalPos;
+
+    if (realState?.flipValue != 0) {
+      /// calculate offsetX after flip
+      double dx = oriWidth - globalPos.dx;
+      double dy = globalPos.dy - (realState?.yGap ?? 0.0);
+      finalGlobalPos = Offset(dx, dy);
+    } else {
+      finalGlobalPos =
+          globalPos - Offset(realState?.xGap ?? 0.0, realState?.yGap ?? 0.0);
+    }
+
+    print("On Corner Change: ${corner} : ${finalGlobalPos}");
+
     if (corner == Corner.topLeft) onTopLeftChange(finalGlobalPos);
     if (corner == Corner.topRight) onTopRightChange(finalGlobalPos);
     if (corner == Corner.bottomLeft) onBottomLeftChange(finalGlobalPos);
