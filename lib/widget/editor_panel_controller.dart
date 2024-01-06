@@ -1,81 +1,72 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import '../flutter_image_editor.dart';
-///The object That are moving.
-enum MoveStuff {
-  non,
-  text,
-}
 
 enum OperateType {
   non,
-  brush, //drawing path
+  drawing,
   text, //add text to canvas
-  flip, //flip image
-  rotated, //rotate canvas
-  clip,
-  mosaic, //draw mosaic
+  metrics,
 }
 
-class EditorPanelController {
-  static const defaultTrashColor = const Color(0x26ffffff);
+/// Todo: set different page category for [drawing] | [text] | [metrics]
+class EditorPanelController with DrawingBinding {
+  EditorPanelController() {
+    colorSelected = ValueNotifier(ImageEditor.uiDelegate.brushColors.first);
+    initPainter(
+      ImageEditor.canvasLauncher.pColor,
+      ImageEditor.canvasLauncher.mosaicWidth,
+      ImageEditor.canvasLauncher.pStrockWidth,
+    );
+  }
+
+  final PageController imgPageController = PageController();
+
+  /// Keep Edited [ui.Picture] for preview and final save.
+  Map<String, ui.Picture> pictureMap = <String, ui.Picture>{};
+
+  /// ============================ LifeCycle Init ============================
+  void initPictureMap(List<ui.Image> images) {
+    for (int i = 0; i < images.length; i++) {
+      ui.Image image = images[i];
+      ui.PictureRecorder recorder = ui.PictureRecorder();
+      Canvas canvas = Canvas(recorder);
+      canvas.drawImage(image, Offset.zero, Paint());
+      pictureMap['$i'] = recorder.endRecording();
+    }
+  }
 
   /// operation history
   /// Record down all the operations that have been performed
   final List<PaintOperation> operationHistory = List.empty(growable: true);
-
-  EditorPanelController() {
-    colorSelected = ValueNotifier(brushColor.first.value);
-  }
-
-  Size? screenSize;
 
   ///take shot action listener
   /// * it's for hide some non-relative ui.
   /// * e.g. hide status bar, hide bottom bar
   ValueNotifier<bool> takeShot = ValueNotifier(false);
 
-  ValueNotifier<bool> showTrashCan = ValueNotifier(false);
-
-  ///trash background color
-  ValueNotifier<Color> trashColor = ValueNotifier(defaultTrashColor);
-
-  ValueNotifier<bool> showAppBar = ValueNotifier(true);
-
-  ValueNotifier<bool> showBottomBar = ValueNotifier(true);
-
   ValueNotifier<OperateType> operateType = ValueNotifier(OperateType.non);
 
-  ///Is current operate type
-  bool isCurrentOperateType(OperateType type) =>
-      type.index == operateType.value.index;
+  late ValueNotifier<Color> colorSelected;
 
-  /// is need to show second panel.
-  ///  * in some operate type like drawing path, it need a 2nd panel for change color.
-  bool show2ndPanel() =>
-      operateType.value == OperateType.brush ||
-      operateType.value == OperateType.mosaic;
+  void onSwitchColor(
+    DrawStyle style, {
+    Color? color,
+  }) {
+    assert(style == DrawStyle.mosaic || color != null);
 
-  final List<Color> brushColor = const <Color>[
-    Color(0xFFFA4D32),
-    Color(0xFFFF7F1E),
-    Color(0xFF2DA24A),
-    Color(0xFFF2F2F2),
-    Color(0xFF222222),
-    Color(0xFF1F8BE5),
-    Color(0xFF4E43DB),
-  ];
-
-  late ValueNotifier<int> colorSelected;
-
-  void selectColor(Color color) {
-    colorSelected.value = color.value;
+    switchPainterColor(style, color: color);
+    colorSelected.value = color ?? Colors.transparent;
   }
 
   ///switch operate type
   void switchOperateType(OperateType type) {
-    operateType.value = type;
+    if (operateType.value == type) {
+      operateType.value = OperateType.non;
+    } else {
+      operateType.value = type;
+    }
   }
 
   void cancelOperateType() {
@@ -83,103 +74,4 @@ class EditorPanelController {
   }
 
   OperateType get currentOperateType => operateType.value;
-
-  ///moving object
-  /// * non : not moving.
-  MoveStuff moveStuff = MoveStuff.non;
-
-  ///trash can position
-  Offset trashCanPosition = Offset(111,
-      (20 + (PlatformDispatcher.instance.implicitView?.padding.bottom ?? 0)));
-
-  ///trash can size.
-  final Size tcSize = Size(153, 77);
-
-  ///The top and bottom panel's slide duration.
-  final Duration panelDuration = const Duration(milliseconds: 300);
-
-  ///hide bottom and top(app) bar.
-  void hidePanel() {
-    showAppBar.value = false;
-    showBottomBar.value = false;
-    switchTrashCan(true);
-  }
-
-  ///show bottom and top(app) bar.
-  void showPanel() {
-    showAppBar.value = true;
-    showBottomBar.value = true;
-    switchTrashCan(false);
-  }
-
-  ///hide/show trash can.
-  void switchTrashCan(bool show) {
-    showTrashCan.value = show;
-  }
-
-  ///switch trash can's color.
-  void switchTrashCanColor(bool isInside) {
-    trashColor.value = isInside ? Colors.red : defaultTrashColor;
-  }
-
-  ///move text.
-  void moveText(FloatTextModel model) {
-    moveStuff = MoveStuff.text;
-    movingTarget = model;
-  }
-
-  ///release the moving-text.
-  void releaseText(
-      DragEndDetails details, FloatTextModel model, Function throwCall) {
-    if (isThrowText(pointerUpPosition ?? Offset.zero, model)) {
-      throwCall.call();
-    }
-    doIdle();
-  }
-
-  ///stop moving.
-  void doIdle() {
-    movingTarget = null;
-    pointerUpPosition = null;
-    moveStuff = MoveStuff.non;
-    switchTrashCanColor(false);
-  }
-
-  ///moving object.
-  /// * must based on [BaseFloatModel].
-  /// * most time it's used to find the [movingTarget] that who just realeased.
-  FloatTextModel? movingTarget;
-
-  ///cache the target taht just released.
-  Offset? pointerUpPosition;
-
-  ///pointer moving's callback
-  void pointerMoving(PointerMoveEvent event) {
-    pointerUpPosition = event.localPosition;
-    switch (moveStuff) {
-      case MoveStuff.non:
-        break;
-      case MoveStuff.text:
-        if (movingTarget is FloatTextModel) {
-          switchTrashCanColor(isThrowText(event.localPosition, movingTarget!));
-        }
-        break;
-    }
-  }
-
-  ///decided whether the text is deleted or not.
-  bool isThrowText(Offset pointer, FloatTextModel target) {
-    final Rect textR = Rect.fromCenter(
-        center: pointer,
-        width: target.floatSize?.width ?? 1,
-        height: target.floatSize?.height ?? 1);
-    final Rect tcR = Rect.fromLTWH(
-        screenSize!.width - trashCanPosition.dx,
-        screenSize!.height - trashCanPosition.dy - tcSize.height,
-        tcSize.width,
-        tcSize.height);
-    return textR.overlaps(tcR);
-  }
-
-
 }

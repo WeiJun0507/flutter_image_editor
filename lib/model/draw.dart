@@ -90,6 +90,28 @@ class PointConfig {
   });
 }
 
+///The launcher provides some initial-values for canvas;
+class CanvasLauncher {
+  factory CanvasLauncher.auto() {
+    return const CanvasLauncher(
+        mosaicWidth: 5.0, pStrockWidth: 5.0, pColor: Colors.red);
+  }
+
+  const CanvasLauncher(
+      {required this.mosaicWidth,
+      required this.pStrockWidth,
+      required this.pColor});
+
+  ///mosaic pixel's width
+  final double mosaicWidth;
+
+  ///painter stroke width.
+  final double pStrockWidth;
+
+  ///painter color
+  final Color pColor;
+}
+
 /// Text Model
 class FloatTextModel {
   String text;

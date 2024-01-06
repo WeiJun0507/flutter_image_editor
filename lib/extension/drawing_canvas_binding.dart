@@ -4,33 +4,25 @@ import 'package:flutter/material.dart';
 import '../flutter_image_editor.dart';
 
 ///drawing board
-mixin DrawingBinding<T extends StatefulWidget> on State<T> {
+mixin DrawingBinding {
   /// Drawing Controller
   late DrawingController painterController;
 
   late StateSetter canvasSetter;
 
+  /// Current drawing style
+  /// Initial will be non and will be changed to draw when user select paint mode.
+  DrawStyle currentStyle = DrawStyle.non;
+
   ///switch painter's style
   /// * e.g. color、mosaic
-  void switchPainterMode(DrawStyle style) {
-    if (style == painterController.painterStyle.drawStyle) {
-      painterController.painterStyle =
-          painterController.painterStyle.copyWith(drawStyle: DrawStyle.non);
-      realState?.panelController.cancelOperateType();
-      return;
-    }
-
+  void switchPainterColor(DrawStyle style, {Color? color}) {
+    currentStyle = style;
     painterController.painterStyle =
         painterController.painterStyle.copyWith(drawStyle: style);
-    realState?.panelController.operateType.value =
-        style == DrawStyle.mosaic ? OperateType.mosaic : OperateType.brush;
-  }
-
-  ///change painter's color
-  void changePainterColor(Color color) async {
-    realState?.panelController.selectColor(color);
-    painterController.painterStyle =
-        painterController.painterStyle.copyWith(color: color);
+    if (color != null) {
+      painterController.painterStyle.color = color;
+    }
   }
 
   ///undo last drawing.
@@ -50,11 +42,6 @@ mixin DrawingBinding<T extends StatefulWidget> on State<T> {
       strokeWidth: pStrokeWidth,
       drawStyle: DrawStyle.non,
     );
-
-    /// todo: See what the listener can do
-    painterController.addListener(() {
-      if (mounted) realState?.setState(() {});
-    });
   }
 
   /// The Drawing Component should only put Listener

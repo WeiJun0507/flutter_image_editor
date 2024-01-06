@@ -124,11 +124,10 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
     if (realState?.flipValue != 0) {
       /// calculate offsetX after flip
       double dx = oriWidth - globalPos.dx;
-      double dy = globalPos.dy - (realState?.yGap ?? 0.0);
+      double dy = globalPos.dy;
       finalGlobalPos = Offset(dx, dy);
     } else {
-      finalGlobalPos =
-          globalPos - Offset(realState?.xGap ?? 0.0, realState?.yGap ?? 0.0);
+      finalGlobalPos = globalPos;
     }
 
     print("On Corner Change: ${corner} : ${finalGlobalPos}");
@@ -193,10 +192,13 @@ mixin ClipCanvasBinding<T extends StatefulWidget> on State<T> {
 
   /// on clip option tap
   void onClipTap(BuildContext context) {
-    if (realState?.panelController.operateType.value == OperateType.clip) {
+    /// todo: change to inner state operation
+    /// metrics is only the current selected mode
+    /// not the actual operation mode
+    if (realState?.panelController.operateType.value == OperateType.metrics) {
       realState?.panelController.operateType.value = OperateType.non;
     } else {
-      realState?.panelController.operateType.value = OperateType.clip;
+      realState?.panelController.operateType.value = OperateType.metrics;
     }
 
     if (mounted) setState(() {});

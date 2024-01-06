@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../flutter_image_editor.dart';
+import '../../flutter_image_editor.dart';
 
 ///A page for input some text to canvas.
 class TextEditorPage extends StatefulWidget {
@@ -14,8 +14,7 @@ class TextEditorPage extends StatefulWidget {
   }
 }
 
-class TextEditorPageState extends State<TextEditorPage>
-    with LittleWidgetBinding, WindowUiBinding {
+class TextEditorPageState extends State<TextEditorPage> with WindowUiBinding {
   static TextConfigModel get configModel =>
       ImageEditor.uiDelegate.textConfigModel;
 
@@ -158,12 +157,7 @@ class TextEditorPageState extends State<TextEditorPage>
                     ),
                   ),
                 ),
-                actions: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 12, bottom: 12, right: 16),
-                    child: doneButtonWidget(onPressed: popWithResult),
-                  ),
-                ],
+                actions: <Widget>[],
               ),
               body: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -199,15 +193,33 @@ class TextEditorPageState extends State<TextEditorPage>
                       children: [
                         GestureDetector(
                           onTap: tapBoldBtn,
-                          child: ImageEditor.uiDelegate.boldTagWidget,
+                          child: Text(
+                            'Bold',
+                            style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
-                        24.hGap,
-                        ImageEditor.uiDelegate.sliderLeftWidget,
-                        8.hGap,
+
+                        Text(
+                          'Small',
+                          style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+
                         Expanded(child: _buildSlider()),
-                        8.hGap,
-                        ImageEditor.uiDelegate.sliderRightWidget,
-                        2.hGap,
+
+                        Text(
+                          'Big',
+                          style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+
                       ],
                     ),
                   ),

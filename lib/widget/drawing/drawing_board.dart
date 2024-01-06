@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../flutter_image_editor.dart';
+import '../../flutter_image_editor.dart';
 
 
 class DrawingBoard extends StatefulWidget {

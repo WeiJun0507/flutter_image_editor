@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_editor/flutter_image_editor.dart';
+import 'package:image_editor/util/main.dart';
 
 void main() {
   runApp(const MyApp());
@@ -71,16 +72,16 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  ui.Image uiImage = await getUiImageWithoutSize(
-                      'assets/images/long-img.jpg');
+                  ui.Image uiImage =
+                      await getUiImageWithoutSize('assets/images/long-img.jpg');
                   double canvasHeight = 0.0;
                   double canvasWidth = 0.0;
                   final screenHeight = MediaQuery.of(context).size.height;
                   final screenWidth = MediaQuery.of(context).size.width;
                   final viewPadding = View.of(context).viewPadding;
 
-                  final maxHeight = screenHeight -
-                      viewPadding.top - kToolbarHeight;
+                  final maxHeight =
+                      screenHeight - viewPadding.top - kToolbarHeight;
 
                   if (uiImage.height > uiImage.width) {
                     canvasHeight = maxHeight;

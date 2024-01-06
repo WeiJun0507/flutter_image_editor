@@ -27,9 +27,6 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
   }
 
   void toTextEditorPage({FloatTextModel? model}) {
-    realState?.panelController.hidePanel();
-    if (mounted) setState(() {});
-
     Navigator.of(context)
         .push(PageRouteBuilder(
             opaque: false,
@@ -38,7 +35,6 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
               return TextEditorPage(model: model);
             }))
         .then((value) {
-      realState?.panelController.showPanel();
       realState?.panelController.cancelOperateType();
       if (value is Map) {
         if (value['isEdit']) {
@@ -62,35 +58,6 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
         height: model.size?.height,
         child: GestureDetector(
           onTap: () => toTextEditorPage(model: model),
-          onPanStart: (_) {
-            realState?.panelController.moveText(model);
-          },
-          onPanUpdate: (details) {
-            final textModel = realState?.panelController.movingTarget;
-            if (textModel != null) {
-              textModel.isSelected = true;
-              textModel.left += details.delta.dx;
-              textModel.top += details.delta.dy;
-              if (mounted) setState(() {});
-              realState?.panelController.hidePanel();
-            }
-          },
-          onPanEnd: (details) {
-            //touch event up
-            realState?.panelController.releaseText(details, model, () {
-              deleteTextWidget(model);
-            });
-
-            model.isSelected = false;
-            if (mounted) setState(() {});
-            realState?.panelController.showPanel();
-          },
-          onPanCancel: () {
-            model.isSelected = false;
-
-            realState?.panelController.doIdle();
-            realState?.panelController.showPanel();
-          },
         ),
       ),
     );
