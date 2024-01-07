@@ -5,11 +5,14 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
+import 'package:image_editor/model/picture_config.dart';
 import 'package:image_editor/util/main.dart';
 import 'package:image_editor/util/size.dart';
+import 'package:image_editor/widget/animation/switches_transition.dart';
 import 'package:image_editor/widget/delegate/image_editor_delegate_impl.dart';
 import 'package:image_editor/painter/edited_image_painter.dart';
 import 'package:image_editor/widget/drawing/color_palette_picker.dart';
+import 'package:image_editor/widget/picture_listing.dart';
 import 'dart:ui' as ui;
 
 import 'package:path_provider/path_provider.dart';
@@ -68,6 +71,9 @@ class ImageEditorState extends State<ImageEditor>
     panelController.initPictureMap([widget.uiImage]);
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      panelController.initPictureImage().then((value) {
+        if (mounted) setState(() {});
+      });
       // Initialize clipper size
       initClipper(actualImageWidth, actualImageHeight);
     });
@@ -122,7 +128,7 @@ class ImageEditorState extends State<ImageEditor>
         ),
         image: widget.uiImage,
         resizeRatio: resizeRatio,
-        drawHistory: panelController.operationHistory,
+        drawHistory: panelController.drawHistory,
         isGeneratingResult: true,
         flipRadians: flipValue,
       );
@@ -166,24 +172,6 @@ class ImageEditorState extends State<ImageEditor>
     }
   }
 
-  /// Utility Tools
-  void undoOperation() {
-    if (panelController.operationHistory.isEmpty) return;
-    PaintOperation operation = panelController.operationHistory.removeLast();
-    switch (operation.type) {
-      case OperationType.rotate:
-        undoRotateCanvas();
-        break;
-      case OperationType.flip:
-        undoFlipCanvas();
-        break;
-      default:
-        break;
-    }
-
-    if (mounted) setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     // Initialize window size
@@ -202,22 +190,30 @@ class ImageEditorState extends State<ImageEditor>
           ),
         ),
         actions: <Widget>[
-          SizedBox(
-            height: 40.0,
-            width: 40.0,
-            child: TextButton(
-              style: TextButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.all(FIESize.medium),
-                backgroundColor: buttonBackgroundColor,
-              ),
-              onPressed: () =>
-                  panelController.switchOperateType(OperateType.drawing),
-              child: Icon(
-                Icons.brush_outlined,
-                color: Colors.white,
-                size: 22.0,
-              ),
+          ValueListenableBuilder(
+            valueListenable: panelController.operateType,
+            builder: (BuildContext context, OperateType type, Widget? child) {
+              return SizedBox(
+                height: 40.0,
+                width: 40.0,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.all(FIESize.medium),
+                    backgroundColor: type == OperateType.drawing
+                        ? activeBtnBg
+                        : inactiveBtnBg,
+                  ),
+                  onPressed: () =>
+                      panelController.switchOperateType(OperateType.drawing),
+                  child: child!,
+                ),
+              );
+            },
+            child: Icon(
+              Icons.brush_outlined,
+              color: Colors.white,
+              size: 22.0,
             ),
           ),
           const SizedBox(width: FIESize.normal),
@@ -227,14 +223,52 @@ class ImageEditorState extends State<ImageEditor>
         children: <Widget>[
           //image
           Expanded(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                size: MediaQuery.of(context).size,
-                painter: EditedImagePainter(
-                  picture: panelController.pictureMap.values.first,
-                ),
-                willChange: false,
-              ),
+            child: PageView.builder(
+              controller: panelController.imgPageController,
+              itemCount: panelController.pictureMap.length,
+              itemBuilder: (BuildContext context, int index) {
+                final PictureConfig config =
+                    panelController.pictureMap.values.elementAt(index);
+
+                return SizedBox(
+                  width: config.currentRect!.width,
+                  height: config.currentRect!.height,
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      key: config.pictureKey,
+                      size: Size(
+                        MediaQuery.of(context).size.width,
+                        config.currentRect!.height,
+                      ),
+                      painter: EditedImagePainter(
+                        config:
+                            panelController.pictureMap.values.toList()[index],
+                        operateType: panelController.operateType.value,
+                        operateHistory: panelController.operateType.value ==
+                                OperateType.drawing
+                            ? panelController.drawHistory
+                            : <PaintOperation>[],
+                      ),
+                      child: Stack(
+                        children: <Widget>[
+                          if (panelController.operateType.value ==
+                              OperateType.drawing)
+                            DrawingBoard(
+                              controller: panelController.painterController,
+                              rect: Rect.fromLTWH(
+                                0.0,
+                                0.0,
+                                config.currentRect!.width,
+                                config.currentRect!.height,
+                              ),
+                              drawHistory: panelController.drawHistory,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -245,7 +279,6 @@ class ImageEditorState extends State<ImageEditor>
                 height: kToolbarHeight,
                 alignment: Alignment.center,
                 child: AnimatedSwitcher(
-                  key: ValueKey(type),
                   duration: const Duration(milliseconds: 300),
                   switchInCurve: Curves.easeOut,
                   switchOutCurve: Curves.easeIn,
@@ -258,7 +291,15 @@ class ImageEditorState extends State<ImageEditor>
                           ? const SizedBox()
                           : type == OperateType.metrics
                               ? const SizedBox()
-                              : const SizedBox(),
+                              : PictureListing(controller: panelController),
+                  transitionBuilder: (child, animation) {
+                    /// todo: Fix Switches Transition animation bug
+                    return SwitchesTransition(
+                      animation: animation,
+                      offset: Offset(0.0, kToolbarHeight),
+                      child: child,
+                    );
+                  },
                 ),
               );
             },

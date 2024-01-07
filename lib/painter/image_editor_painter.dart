@@ -250,7 +250,6 @@ class ImageEditorPainter extends CustomPainter {
         canvas.drawPath(
           paintPath(
             canvas,
-            size,
             originalRect,
             isGeneratingResult ? cropRect : originalRect,
             point.drawRecord,
@@ -263,7 +262,6 @@ class ImageEditorPainter extends CustomPainter {
         //reduce the frequency of mosaic drawing.
         paintMosaic(
           canvas,
-          size,
           originalRect,
           isGeneratingResult ? cropRect : originalRect,
           point,

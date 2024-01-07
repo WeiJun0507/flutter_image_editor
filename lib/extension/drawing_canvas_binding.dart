@@ -8,11 +8,16 @@ mixin DrawingBinding {
   /// Drawing Controller
   late DrawingController painterController;
 
-  late StateSetter canvasSetter;
-
   /// Current drawing style
   /// Initial will be non and will be changed to draw when user select paint mode.
   DrawStyle currentStyle = DrawStyle.non;
+
+  late ValueNotifier<Color> colorSelected;
+
+  /// Drawing History
+  /// has to be clear when OperateType from drawing change to another type.
+  /// The result should save and generate a new [ui.Picture] and save in [pictureMap]
+  final List<PaintOperation> drawHistory = List.empty(growable: true);
 
   ///switch painter's style
   /// * e.g. color、mosaic
@@ -43,23 +48,12 @@ mixin DrawingBinding {
       drawStyle: DrawStyle.non,
     );
   }
-
-  /// The Drawing Component should only put Listener
-  /// instead of the whole function drawing pad
-  Widget buildDrawingComponent(Rect rect, List<PaintOperation> drawHistory) {
-    return DrawingBoard(
-      controller: painterController,
-      rect: rect,
-      drawHistory: drawHistory,
-    );
-  }
 }
 
 extension DrawingPath on CustomPainter {
   //for draw [DrawStyle.mosaic]
   void paintMosaic(
     Canvas canvas,
-    Size size,
     Rect oriRect,
     Rect rect,
     PointConfig point,
@@ -111,9 +105,9 @@ extension DrawingPath on CustomPainter {
   }
 
   //for draw [DrawStyle.normal]
+  /// todo: something wrong with this method
   Path paintPath(
     Canvas canvas,
-    Size size,
     Rect oriRect,
     Rect rect,
     List<Point> points,
@@ -165,6 +159,7 @@ extension DrawingPath on CustomPainter {
         });
       }
     });
+
     return path;
   }
 }

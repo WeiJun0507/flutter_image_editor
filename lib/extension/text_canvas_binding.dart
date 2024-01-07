@@ -5,22 +5,26 @@ import '../flutter_image_editor.dart';
 mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
   late StateSetter textSetter;
 
+  /// This should act different than other history
+  /// as the text should be able to drag, delete, and edit
+  /// However, maintaining its order is difficult to identify its real position layer.
+  final List<PaintOperation> textHistory = List.empty(growable: true);
+
   void addText(FloatTextModel model) {
     PaintOperation value = PaintOperation(
       type: OperationType.text,
       data: model,
     );
-    realState?.panelController.operationHistory.add(value);
+    textHistory.add(value);
     if (mounted) setState(() {});
   }
 
   ///delete a text from canvas
   void deleteTextWidget(FloatTextModel target) {
-    int index = realState?.panelController.operationHistory
-            .indexWhere((element) => element.data == target) ??
-        -1;
+    int index = textHistory
+            .indexWhere((element) => element.data == target);
     if (index != -1) {
-      realState?.panelController.operationHistory.removeAt(index);
+      textHistory.removeAt(index);
     }
 
     if (mounted) setState(() {});

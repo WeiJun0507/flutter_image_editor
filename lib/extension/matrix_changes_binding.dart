@@ -14,6 +14,8 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
   /// * 180 angle each time.
   double flipValue = 0;
 
+  final List<PaintOperation> matricsHistory = List.empty(growable: true);
+
   RotateDirection get getRotateDirection {
     if (rotateValue == 0) {
       return RotateDirection.top;
@@ -33,7 +35,7 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
       type: OperationType.flip,
       data: FlipInfo(flipRadians: flipValue),
     );
-    realState?.panelController.operationHistory.add(value);
+    matricsHistory.add(value);
   }
 
   void undoFlipCanvas() {
@@ -49,7 +51,7 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
       data: RotateInfo(
           radians: rotateValue * math.pi / 2, direction: getRotateDirection),
     );
-    realState?.panelController.operationHistory.add(value);
+    matricsHistory.add(value);
   }
 
   void undoRotateCanvas() {
@@ -62,7 +64,7 @@ mixin RotateCanvasBinding<T extends StatefulWidget> on State<T> {
       type: OperationType.rotate,
       data: RotateInfo(radians: 0, direction: getRotateDirection),
     );
-    realState?.panelController.operationHistory.add(value);
+    matricsHistory.add(value);
   }
 }
 

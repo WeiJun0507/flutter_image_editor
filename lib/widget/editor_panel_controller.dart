@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:image_editor/model/picture_config.dart';
 import '../flutter_image_editor.dart';
 
 enum OperateType {
@@ -24,7 +25,7 @@ class EditorPanelController with DrawingBinding {
   final PageController imgPageController = PageController();
 
   /// Keep Edited [ui.Picture] for preview and final save.
-  Map<String, ui.Picture> pictureMap = <String, ui.Picture>{};
+  Map<String, PictureConfig> pictureMap = <String, PictureConfig>{};
 
   /// ============================ LifeCycle Init ============================
   void initPictureMap(List<ui.Image> images) {
@@ -33,13 +34,32 @@ class EditorPanelController with DrawingBinding {
       ui.PictureRecorder recorder = ui.PictureRecorder();
       Canvas canvas = Canvas(recorder);
       canvas.drawImage(image, Offset.zero, Paint());
-      pictureMap['$i'] = recorder.endRecording();
+      ui.Picture picture = recorder.endRecording();
+      pictureMap['$i'] = PictureConfig(
+        picture: picture,
+        originalRect: Rect.fromLTWH(
+          0.0,
+          0.0,
+          image.width.toDouble(),
+          image.height.toDouble(),
+        ),
+        currentRect: Rect.fromLTWH(
+          0.0,
+          0.0,
+          image.width.toDouble(),
+          image.height.toDouble(),
+        ),
+      );
     }
   }
 
-  /// operation history
+  Future<void> initPictureImage() async {
+    pictureMap.forEach((key, value) async {
+      value.image = await value.picture!.toImage(40, 40);
+    });
+  }
+
   /// Record down all the operations that have been performed
-  final List<PaintOperation> operationHistory = List.empty(growable: true);
 
   ///take shot action listener
   /// * it's for hide some non-relative ui.
@@ -47,8 +67,6 @@ class EditorPanelController with DrawingBinding {
   ValueNotifier<bool> takeShot = ValueNotifier(false);
 
   ValueNotifier<OperateType> operateType = ValueNotifier(OperateType.non);
-
-  late ValueNotifier<Color> colorSelected;
 
   void onSwitchColor(
     DrawStyle style, {
@@ -72,6 +90,4 @@ class EditorPanelController with DrawingBinding {
   void cancelOperateType() {
     operateType.value = OperateType.non;
   }
-
-  OperateType get currentOperateType => operateType.value;
 }

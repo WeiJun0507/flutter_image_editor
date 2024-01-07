@@ -18,7 +18,6 @@ class ColorPalettePicker extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: controller.colorSelected,
       builder: (BuildContext context, Color selectedColor, Widget? _) {
-        print("selectedColor: $selectedColor");
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
