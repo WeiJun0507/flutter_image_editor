@@ -115,6 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         uiImage: uiImage,
                         width: canvasWidth,
                         height: canvasHeight,
+                        locale: Locale('zh'),
                       ),
                     ),
                   )

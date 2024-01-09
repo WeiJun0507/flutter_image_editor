@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image_editor/widget/locale_delegate.dart';
 import '../flutter_image_editor.dart';
 ///The object That are moving.
 enum MoveStuff {
@@ -19,15 +20,16 @@ enum OperateType {
 }
 
 class EditorPanelController {
+
+  EditorPanelController() {
+    colorSelected = ValueNotifier(brushColor.first.value);
+  }
+
   static const defaultTrashColor = const Color(0x26ffffff);
 
   /// operation history
   /// Record down all the operations that have been performed
   final List<PaintOperation> operationHistory = List.empty(growable: true);
-
-  EditorPanelController() {
-    colorSelected = ValueNotifier(brushColor.first.value);
-  }
 
   Size? screenSize;
 
@@ -97,6 +99,8 @@ class EditorPanelController {
 
   ///The top and bottom panel's slide duration.
   final Duration panelDuration = const Duration(milliseconds: 300);
+
+  LocaleDelegate localeDelegate = LocaleDelegate();
 
   ///hide bottom and top(app) bar.
   void hidePanel() {

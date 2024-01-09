@@ -1,12 +1,18 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:image_editor/widget/locale_delegate.dart';
 import '../flutter_image_editor.dart';
 
 ///A page for input some text to canvas.
 class TextEditorPage extends StatefulWidget {
   final FloatTextModel? model;
+  final LocaleDelegate localeDelegate;
 
-  const TextEditorPage({super.key, this.model});
+  const TextEditorPage({
+    super.key,
+    this.model,
+    required this.localeDelegate,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -153,7 +159,7 @@ class TextEditorPageState extends State<TextEditorPage>
                     alignment: Alignment.center,
                     padding: EdgeInsets.only(top: 12, bottom: 12),
                     child: Text(
-                      'Cancel',
+                      widget.localeDelegate.cancel,
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
@@ -161,7 +167,16 @@ class TextEditorPageState extends State<TextEditorPage>
                 actions: [
                   Padding(
                     padding: EdgeInsets.only(top: 12, bottom: 12, right: 16),
-                    child: doneButtonWidget(onPressed: popWithResult),
+                    child: GestureDetector(
+                      onTap: popWithResult,
+                      child: Text(
+                        widget.localeDelegate.done,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -199,14 +214,34 @@ class TextEditorPageState extends State<TextEditorPage>
                       children: [
                         GestureDetector(
                           onTap: tapBoldBtn,
-                          child: ImageEditor.uiDelegate.boldTagWidget,
+                          child: Text(
+                            realState?.panelController.localeDelegate.bold ??
+                                'Bold',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                         24.hGap,
-                        ImageEditor.uiDelegate.sliderLeftWidget,
+                        Text(
+                          realState?.panelController.localeDelegate.small ??
+                              'Small',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 13),
+                        ),
                         8.hGap,
                         Expanded(child: _buildSlider()),
                         8.hGap,
-                        ImageEditor.uiDelegate.sliderRightWidget,
+                        Text(
+                          realState?.panelController.localeDelegate.big ??
+                              'Big',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 13),
+                        ),
                         2.hGap,
                       ],
                     ),

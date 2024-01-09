@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_editor/widget/locale_delegate.dart';
 import '../flutter_image_editor.dart';
 
 ///text painting
@@ -35,7 +36,11 @@ mixin TextCanvasBinding<T extends StatefulWidget> on State<T> {
             opaque: false,
             pageBuilder: (BuildContext context, Animation<double> animation,
                 Animation<double> secondaryAnimation) {
-              return TextEditorPage(model: model);
+              return TextEditorPage(
+                model: model,
+                localeDelegate: realState?.panelController.localeDelegate ??
+                    LocaleDelegate(),
+              );
             }))
         .then((value) {
       realState?.panelController.showPanel();

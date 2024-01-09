@@ -47,17 +47,17 @@ class DefaultImageEditorDelegate extends ImageEditorDelegate {
   }
 
   @override
-  Widget doneWidget(BoxConstraints constraints) {
+  Widget doneWidget(
+      EditorPanelController controller, BoxConstraints constraints) {
     return Container(
       constraints: constraints,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(6)),
-          gradient:
-              const LinearGradient(colors: [Colors.green, Colors.greenAccent])),
       child: Text(
-        'Done',
-        style: TextStyle(fontSize: 15, color: Colors.white),
+        controller.localeDelegate.done,
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -132,25 +132,6 @@ class DefaultImageEditorDelegate extends ImageEditorDelegate {
   Widget undoWidget(double limitSize) =>
       Icon(Icons.undo, size: limitSize, color: Colors.white);
 
-  @override
-  Widget get boldTagWidget => Text(
-        'Bold',
-        style: TextStyle(
-            fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold),
-      );
-
-  @override
-  Widget get sliderLeftWidget => _txtFlatWidget('small');
-
-  @override
-  Widget get sliderRightWidget => _txtFlatWidget('big');
-
-  Widget _txtFlatWidget(String txt) {
-    return Text(
-      txt,
-      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
-    );
-  }
 }
 
 ///This model for [TextEditorPage] to initial text style.
@@ -181,8 +162,6 @@ abstract class ImageEditorDelegate {
   final double _unDoWidgetSize = 20;
 
   final double _backWidgetSize = 22;
-
-  Widget buildDoneWidget() => doneWidget(_doneWidgetCons);
 
   Widget buildOperateWidget(OperateType type, {required bool choosen}) {
     switch (type) {
@@ -218,16 +197,6 @@ abstract class ImageEditorDelegate {
   ///Slider's theme data
   SliderThemeData sliderThemeData(BuildContext context);
 
-  ///Slider's tag
-  /// * left-flag(small) - Slider - right-flag(big)
-  Widget get sliderLeftWidget;
-
-  ///Slider's tag
-  /// * left-flag(small) - Slider - right-flag(big)
-  Widget get sliderRightWidget;
-
-  ///To control the text style of bold.
-  Widget get boldTagWidget;
 
   ///Text config model
   /// * see also: [TextEditorPage]
@@ -268,7 +237,8 @@ abstract class ImageEditorDelegate {
 
   ///Done widget
   /// * for save the edit action and generate a new image as result.
-  Widget doneWidget(BoxConstraints constraints);
+  Widget doneWidget(
+      EditorPanelController controller, BoxConstraints constraints);
 
   ///Undo widget
   /// * for undo last edit action.
